@@ -1,3 +1,5 @@
+import struct
+
 import serial.tools.list_ports
 import serial
 import re
@@ -15,21 +17,26 @@ try:
     ser = serial.Serial(arduino_port, 9600, timeout=1)
     print(f"Connected to Arduino at {arduino_port}")
 
-    print("Starting CAN dump (Ctrl+C to stop)...")
     while True:
         try:
             line = ser.readline().decode().strip()
-
-            # Extract ID, Length, and Data using regex
             match = re.match(r"ID:(0x[0-9A-Fa-f]+),L:(\d+),D:(.*)", line)
             if match:
-                can_id = match.group(1)  # CAN ID (e.g., 0x540)
-                length = int(match.group(2))  # Data Length (e.g., 8)
-                data = match.group(3).strip()  # Data (e.g., 0x2 0x0 0x0 0x0 0x11 0x0 0x0 0x77)
+                can_id = int(match.group(1), 16)
+                length = int(match.group(2))
+                data = match.group(3).strip()
+                data_bytes = [int(x, 16) for x in data.split()]
+                if can_id == 0x540:
+                    if data_bytes[0] != 0x02:
+                        continue
+                    gear = str(data_bytes[3] & 0x0F)
+                    print(f"Gear: {gear}", flush=True)
 
-                print(f"Extracted - CAN ID: {can_id}, Length: {length}, Data: {data}")
-            else:
-                print(f"No match: {line}")  # Print the line if it doesn't match the expected format
+                    engine_rpm = (data_bytes[1] << 8) | data_bytes[2]
+                    print(f"Engine RPM: {engine_rpm}", flush=True)
+
+                    coolant_temp = struct.unpack(">H", bytes(data_bytes[6:8]))[0] / 10.0
+                    print(f"Coolant Temperature: {coolant_temp} °C", flush=True)
 
         except KeyboardInterrupt:
             print("\nStopping CAN dump...")

@@ -16,7 +16,7 @@ try:
     ser = serial.Serial(arduino_port, 9600, timeout=1)
     print(f"Connected to Arduino at {arduino_port}")
 
-    with open("canlog.txt", "a") as log_file:
+    with open("combiInstru.txt", "a") as log_file:
         print("Starting CAN dump (Ctrl+C to stop)...")
         log_file.write("Timestamp,CAN ID,Length,Data\n")  # CSV header
 
