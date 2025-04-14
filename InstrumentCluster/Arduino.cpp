@@ -17,17 +17,23 @@ Arduino::~Arduino() {
     }
 }
 
-void Arduino::start(const std::string& port) {
+void Arduino::start() {
     if (isRunning) return;
 
-    try {
-        serialPort.open(port.empty() ? findArduinoPort() : port);
-        serialPort.set_option(boost::asio::serial_port_base::baud_rate(9600));
-        isRunning = true;
-        serialThread = std::thread(&Arduino::readSerial, this);
-    } catch (const std::exception& e) {
-        std::cerr << "Arduino connection failed: " << e.what() << std::endl;
-    }
+    isRunning = true;
+    serialThread = std::thread([this]
+    {
+        try {
+            std::string chosenPort = findArduinoPort();
+            std::cout << "Arduino on: " << chosenPort << std::endl;
+            serialPort.open(chosenPort);
+            serialPort.set_option(boost::asio::serial_port_base::baud_rate(9600));
+            readSerial();
+        } catch (const std::exception& e) {
+            std::cerr << "Arduino connection failed: " << e.what() << std::endl;
+            isRunning = false;
+        }
+    });
 }
 
 void Arduino::stop() {
@@ -36,41 +42,28 @@ void Arduino::stop() {
 }
 
 void Arduino::getData(int& gear, int& rpm, float& temp) {
-    std::lock_guard<std::mutex> lock(dataMutex);
+    std::lock_guard lock(dataMutex);
     gear = currentGear.load();
     rpm = currentRpm.load();
     temp = currentTemp.load();
 }
 
-bool Arduino::isConnected() const {
-    return serialPort.is_open() && isRunning;
-}
-
 std::string Arduino::findArduinoPort() {
-    for (const auto& entry : boost::filesystem::directory_iterator("/dev")) {
-        std::string port = entry.path().string();
-        if (std::regex_match(port, std::regex(".*(ttyUSB|ttyACM|ttyAMA|ttyS)\\d+"))) {
-            try {
-                boost::asio::serial_port testPort(ioContext);
-                testPort.open(port);
-                testPort.set_option(boost::asio::serial_port_base::baud_rate(9600));
+    const std::string path = "/dev/serial/by-id/";
+    if (!boost::filesystem::exists(path)) {
+        throw std::runtime_error("Path not found: " + path);
+    }
 
-                std::string response;
-                char c;
-                while (boost::asio::read(testPort, boost::asio::buffer(&c, 1))) {
-                    if (c == '\n') break;
-                    response += c;
-                }
-
-                if (response.find("Arduino") != std::string::npos) {
-                    return port;
-                }
-            } catch (...) {}
+    for (const auto& entry : boost::filesystem::directory_iterator(path)) {
+        std::string symlink = entry.path().string();
+        if (symlink.find("Arduino") != std::string::npos || symlink.find("usbserial") != std::string::npos) {
+            std::string realPath = boost::filesystem::canonical(symlink).string();
+            return realPath;
         }
     }
+
     throw std::runtime_error("No Arduino found");
 }
-
 void Arduino::readSerial() {
     std::string buffer;
     char c;
@@ -82,14 +75,14 @@ void Arduino::readSerial() {
                     buffer.find(",R:") != std::string::npos &&
                     buffer.find(",T:") != std::string::npos) {
 
-                    std::lock_guard<std::mutex> lock(dataMutex);
+                    std::lock_guard lock(dataMutex);
                     size_t gearPos = buffer.find("G:");
                     size_t rpmPos = buffer.find(",R:");
                     size_t tempPos = buffer.find(",T:");
 
-                    currentGear = std::stoi(buffer.substr(gearPos+2, rpmPos - (gearPos+2)));
-                    currentRpm = std::stoi(buffer.substr(rpmPos+3, tempPos - (rpmPos+3)));
-                    currentTemp = std::stof(buffer.substr(tempPos+3));
+                    currentGear = std::stoi(buffer.substr(gearPos + 2, rpmPos - (gearPos + 2)));
+                    currentRpm = std::stoi(buffer.substr(rpmPos + 3, tempPos - (rpmPos + 3)));
+                    currentTemp = std::stof(buffer.substr(tempPos + 3));
                 }
                 buffer.clear();
             } else {

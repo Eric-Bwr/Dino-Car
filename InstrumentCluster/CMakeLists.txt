@@ -9,7 +9,7 @@ find_package(Boost REQUIRED COMPONENTS system filesystem)
 include_directories(${SDL2_INCLUDE_DIRS} ${SDL2_TTF_INCLUDE_DIRS})
 link_directories(${SDL2_LIBRARY_DIRS})
 
-add_executable(Cluster Cluster.cpp Arduino.cpp)
+add_executable(Cluster Cluster.cpp Arduino.cpp Renderer.cpp)
 
 target_compile_options(Cluster PRIVATE -O2 -Wall)
 

@@ -10,11 +10,9 @@ class Arduino {
 public:
     Arduino();
     ~Arduino();
-    void start(const std::string& port);
+    void start();
     void stop();
     void getData(int& gear, int& rpm, float& temp);
-    bool isConnected() const;
-
 private:
     void readSerial();
     std::string findArduinoPort();
