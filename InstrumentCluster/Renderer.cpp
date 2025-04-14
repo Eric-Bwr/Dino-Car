@@ -1,5 +1,6 @@
 #include "Renderer.h"
 #include <iostream>
+#include <sstream>
 
 #define IS_RASPI (__arm__ || __aarch64__)
 
@@ -52,7 +53,7 @@ void Renderer::start(){
     font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 50);
 }
 
-void Renderer::render(){
+void Renderer::render(int gear, int rpm, float temp){
     for (int y = 0; y < height; y++) {
         float ratio = (float)y / height;
         SDL_SetRenderDrawColor(renderer,
@@ -62,15 +63,16 @@ void Renderer::render(){
         SDL_RenderDrawLine(renderer, 0, y, width, y);
     }
 
-    int gear = 0;
-    int rpm = 2;
-    static float testTemp = 0;
+    std::ostringstream oss;
+    oss.precision(1);
+    oss << std::fixed << temp;
+    std::string tempFormatted = oss.str();
+
     std::string texts[] = {
         "Gear: " + std::to_string(gear),
         "RPM: " + std::to_string(rpm),
-        "Temp: " + std::to_string(testTemp) + "°C"
+        "Temp: " + tempFormatted + "C"
     };
-    testTemp += 0.0002f;
 
     const SDL_Color textColor = {255, 255, 255, 255};
     int yOffset = -50;

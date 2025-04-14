@@ -1,23 +1,20 @@
-#include <iostream>
-
 #include "Arduino.h"
 #include "Renderer.h"
 
 int main() {
+    int gear = 0;
+    int rpm = 0;
+    float temp = 0.0f;
+
     Arduino arduino;
     arduino.start();
 
     Renderer renderer(800, 480);
     renderer.start();
 
-    SDL_Event e;
-    bool running = true;
-    while (running) {
-        while (SDL_PollEvent(&e)) {
-            if (e.type == SDL_QUIT) running = false;
-        }
-        renderer.render();
+    while (true) {
+        arduino.getData(gear, rpm, temp);
+        renderer.render(gear, rpm, temp);
         SDL_Delay(16);
     }
-
 }

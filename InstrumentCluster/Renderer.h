@@ -8,7 +8,7 @@ public:
     Renderer(int width, int height);
     ~Renderer();
     void start();
-    void render();
+    void render(int gear, int rpm, float temp);
 private:
     SDL_Window* window;
     SDL_Renderer* renderer;
