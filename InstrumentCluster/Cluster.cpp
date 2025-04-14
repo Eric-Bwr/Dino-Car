@@ -1,83 +1,71 @@
+#include "Arduino.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <iostream>
-#include <thread>
-#include <atomic>
 
-const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 480;
+const int screenWidth = 800;
+const int screenHeight = 480;
+const SDL_Color backgroundColor = {43, 43, 43, 255};
+const SDL_Color textColor = {255, 255, 255, 255};
 
-const SDL_Color TOP_COLOR = {0, 0, 255, 255};       // Blue (top gradient)
-const SDL_Color BOTTOM_COLOR = {255, 0, 0, 255};    // Red (bottom gradient)
-const SDL_Color TEXT_COLOR = {255, 255, 255, 255};  // White text
+void render(SDL_Renderer* renderer, TTF_Font* font, Arduino& arduino) {
+    SDL_SetRenderDrawColor(renderer, backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
+    SDL_RenderClear(renderer);
 
-std::atomic<int> intakeTemp(20);
+    int gear, rpm;
+    float temp;
+    arduino.getData(gear, rpm, temp);
 
-void renderGradient(SDL_Renderer* renderer) {
-    for (int y = 0; y < SCREEN_HEIGHT; y++) {
-        float t = static_cast<float>(y) / SCREEN_HEIGHT;
-        Uint8 r = TOP_COLOR.r + (BOTTOM_COLOR.r - TOP_COLOR.r) * t;
-        Uint8 g = TOP_COLOR.g + (BOTTOM_COLOR.g - TOP_COLOR.g) * t;
-        Uint8 b = TOP_COLOR.b + (BOTTOM_COLOR.b - TOP_COLOR.b) * t;
+    std::string texts[] = {
+        "Gear: " + std::to_string(gear),
+        "RPM: " + std::to_string(rpm),
+        "Temp: " + std::to_string(temp) + "°C"
+    };
 
-        SDL_SetRenderDrawColor(renderer, r, g, b, 255);
-        SDL_RenderDrawLine(renderer, 0, y, SCREEN_WIDTH, y);
+    int yOffset = -50;
+    for (const auto& text : texts) {
+        SDL_Surface* surface = TTF_RenderText_Blended(font, text.c_str(), textColor);
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_Rect rect = {(screenWidth - surface->w)/2, (screenHeight - surface->h)/2 + yOffset, surface->w, surface->h};
+        SDL_RenderCopy(renderer, texture, nullptr, &rect);
+        SDL_FreeSurface(surface);
+        SDL_DestroyTexture(texture);
+        yOffset += 50;
     }
-}
 
-void updateTemperature() {
-    while (true) {
-        intakeTemp += 1;
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    }
+    SDL_RenderPresent(renderer);
 }
 
 int main() {
     setenv("SDL_VIDEODRIVER", "kmsdrm", 1);
     SDL_Init(SDL_INIT_VIDEO);
     TTF_Init();
-
-    SDL_Window* window = SDL_CreateWindow("Instrument Cluster", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_FULLSCREEN);
+    SDL_Window* window = SDL_CreateWindow("Dashboard", 0, 0, screenWidth, screenHeight, SDL_WINDOW_FULLSCREEN);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    TTF_Font* font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 50);
 
-    TTF_Font* font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72);
-    if (!font) std::cerr << "Failed to load font\n";
+    Arduino arduino;
+    arduino.start("");
 
-    std::thread tempThread(updateTemperature);
+    if (!arduino.isConnected()) {
+        std::cerr << "Failed to connect to Arduino" << std::endl;
+    }
 
-    bool running = true;
-    while (running) {
+    while (true) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) running = false;
+            if (event.type == SDL_QUIT) {
+                goto cleanup;
+            }
         }
-
-        renderGradient(renderer);
-
-        std::string tempText = "Intake: " + std::to_string(intakeTemp.load()) + "°C";
-        SDL_Surface* textSurface = TTF_RenderText_Blended(font, tempText.c_str(), TEXT_COLOR);
-        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-
-        SDL_Rect textRect{
-            (SCREEN_WIDTH - textSurface->w) / 2,
-            (SCREEN_HEIGHT - textSurface->h) / 2,
-            textSurface->w,
-            textSurface->h
-        };
-
-        SDL_RenderCopy(renderer, textTexture, nullptr, &textRect);
-
-        SDL_FreeSurface(textSurface);
-        SDL_DestroyTexture(textTexture);
-
-        SDL_RenderPresent(renderer);
+        render(renderer, font, arduino);
         SDL_Delay(50);
     }
 
-    tempThread.detach();
-    TTF_CloseFont(font);
+cleanup:
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     TTF_Quit();
     SDL_Quit();
+    return 0;
 }
