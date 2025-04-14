@@ -7,7 +7,7 @@ const int screenWidth = 800;
 const int screenHeight = 480;
 const SDL_Color backgroundColor = {43, 43, 43, 255};
 const SDL_Color textColor = {255, 255, 255, 255};
-
+static float testTemp = 0.0f;
 void render(SDL_Renderer* renderer, TTF_Font* font, Arduino& arduino) {
     for (int y = 0; y < screenHeight; y++) {
         float ratio = (float)y / screenHeight;
@@ -25,8 +25,10 @@ void render(SDL_Renderer* renderer, TTF_Font* font, Arduino& arduino) {
     std::string texts[] = {
         "Gear: " + std::to_string(gear),
         "RPM: " + std::to_string(rpm),
-        "Temp: " + std::to_string(temp) + "°C"
+        "Temp: " + std::to_string(testTemp) + "°C"
     };
+
+    testTemp += 0.0002f;
 
     int yOffset = -50;
     for (const auto& text : texts) {
