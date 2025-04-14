@@ -9,8 +9,14 @@ const SDL_Color backgroundColor = {43, 43, 43, 255};
 const SDL_Color textColor = {255, 255, 255, 255};
 
 void render(SDL_Renderer* renderer, TTF_Font* font, Arduino& arduino) {
-    SDL_SetRenderDrawColor(renderer, backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
-    SDL_RenderClear(renderer);
+    for (int y = 0; y < screenHeight; y++) {
+        float ratio = (float)y / screenHeight;
+        SDL_SetRenderDrawColor(renderer,
+            0, 0,
+            static_cast<Uint8>(255 * (1.0 - ratio)),
+            255);
+        SDL_RenderDrawLine(renderer, 0, y, screenWidth, y);
+    }
 
     int gear, rpm;
     float temp;
@@ -26,8 +32,12 @@ void render(SDL_Renderer* renderer, TTF_Font* font, Arduino& arduino) {
     for (const auto& text : texts) {
         SDL_Surface* surface = TTF_RenderText_Blended(font, text.c_str(), textColor);
         SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-        SDL_Rect rect = {(screenWidth - surface->w)/2, (screenHeight - surface->h)/2 + yOffset, surface->w, surface->h};
-        SDL_RenderCopy(renderer, texture, nullptr, &rect);
+        SDL_Rect rect = {
+            (screenWidth - surface->w)/2,
+            (screenHeight - surface->h)/2 + yOffset,
+            surface->w, surface->h
+        };
+        SDL_RenderCopyEx(renderer, texture, nullptr, &rect, 180, nullptr, SDL_FLIP_NONE);
         SDL_FreeSurface(surface);
         SDL_DestroyTexture(texture);
         yOffset += 50;
@@ -39,9 +49,11 @@ void render(SDL_Renderer* renderer, TTF_Font* font, Arduino& arduino) {
 int main() {
     setenv("SDL_VIDEODRIVER", "kmsdrm", 1);
     SDL_Init(SDL_INIT_VIDEO);
+    SDL_ShowCursor(SDL_DISABLE);
     TTF_Init();
     SDL_Window* window = SDL_CreateWindow("Dashboard", 0, 0, screenWidth, screenHeight, SDL_WINDOW_FULLSCREEN);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
     TTF_Font* font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 50);
 
     Arduino arduino;

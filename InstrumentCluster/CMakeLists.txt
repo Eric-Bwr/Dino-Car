@@ -11,6 +11,8 @@ link_directories(${SDL2_LIBRARY_DIRS})
 
 add_executable(Cluster Cluster.cpp Arduino.cpp)
 
+target_compile_options(Cluster PRIVATE -O2 -Wall)
+
 target_link_libraries(Cluster
         ${SDL2_LIBRARIES}
         ${SDL2_TTF_LIBRARIES}
