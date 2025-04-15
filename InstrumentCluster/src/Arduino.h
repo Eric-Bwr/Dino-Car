@@ -3,8 +3,8 @@
 #include <boost/asio.hpp>
 #include <string>
 #include <atomic>
-#include <mutex>
 #include <thread>
+#include "VehicleConstants.h"
 
 class Arduino {
 public:
@@ -12,17 +12,13 @@ public:
     ~Arduino();
     void start();
     void stop();
-    void getData(int& gear, int& rpm, float& temp);
+    VehicleData getData() const;
 private:
     void readSerial();
     std::string findArduinoPort();
-
+    std::atomic<bool> isRunning;
+    VehicleData data;
     boost::asio::io_context ioContext;
     boost::asio::serial_port serialPort;
     std::thread serialThread;
-    std::atomic<bool> isRunning;
-    std::mutex dataMutex;
-    std::atomic<int> currentGear;
-    std::atomic<int> currentRpm;
-    std::atomic<float> currentTemp;
 };

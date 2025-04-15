@@ -4,11 +4,9 @@
 #include <iostream>
 
 Arduino::Arduino() :
-    serialPort(ioContext),
     isRunning(false),
-    currentGear(0),
-    currentRpm(0),
-    currentTemp(0.0f) {}
+    data(),
+    serialPort(ioContext) {}
 
 Arduino::~Arduino() {
     stop();
@@ -41,11 +39,8 @@ void Arduino::stop() {
     if (serialPort.is_open()) serialPort.close();
 }
 
-void Arduino::getData(int& gear, int& rpm, float& temp) {
-    std::lock_guard lock(dataMutex);
-    gear = currentGear.load();
-    rpm = currentRpm.load();
-    temp = currentTemp.load();
+VehicleData Arduino::getData() const {
+    return data;
 }
 
 std::string Arduino::findArduinoPort() {
@@ -66,25 +61,21 @@ std::string Arduino::findArduinoPort() {
 }
 
 void Arduino::readSerial() {
-    // "G:0,R:0,T:19.70,Th:10.98,L:0.00,A:21.00"
     std::string buffer;
+    std::regex re(R"(G:(\d+),R:(\d+),T:([\d\.]+),Th:([\d\.]+),L:([\d\.]+),A:([\d\.]+))");
     char c;
     while (isRunning) {
         try {
             boost::asio::read(serialPort, boost::asio::buffer(&c, 1));
             if (c == '\n') {
-                if (buffer.find("G:") != std::string::npos &&
-                    buffer.find(",R:") != std::string::npos &&
-                    buffer.find(",T:") != std::string::npos) {
-
-                    std::lock_guard lock(dataMutex);
-                    size_t gearPos = buffer.find("G:");
-                    size_t rpmPos = buffer.find(",R:");
-                    size_t tempPos = buffer.find(",T:");
-
-                    currentGear = std::stoi(buffer.substr(gearPos + 2, rpmPos - (gearPos + 2)));
-                    currentRpm = std::stoi(buffer.substr(rpmPos + 3, tempPos - (rpmPos + 3)));
-                    currentTemp = std::stof(buffer.substr(tempPos + 3));
+                std::smatch match;
+                if (std::regex_search(buffer, match, re) && match.size() == 7) {
+                    data.currentGear = std::stoi(match[1]);
+                    data.currentRpm = std::stoi(match[2]);
+                    data.currentTemp = std::stof(match[3]);
+                    data.currentThrottle = std::stof(match[4]);
+                    data.currentLoad = std::stof(match[5]);
+                    data.currentAmbient = std::stof(match[6]);
                 }
                 buffer.clear();
             } else {
