@@ -9,7 +9,7 @@
 const float START_ANGLE = 90.0f + 30.0f;
 const float END_ANGLE = 90.0f + 330.0f;
 
-Renderer::Renderer(int width, int height) : window(nullptr), renderer(nullptr), gearFont(nullptr), speedFont(nullptr), numberFont(nullptr), width(width), height(height){
+Renderer::Renderer(int width, int height) : window(nullptr), renderer(nullptr), width(width), height(height){
 #if IS_RASPI
     screenAngle = 180.0;
 #else
@@ -60,7 +60,7 @@ void Renderer::start(){
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     gearFont = TTF_OpenFont("../assets/trans.ttf", 270);
-    speedFont = TTF_OpenFont("../assets/trans.ttf", 100);
+    speedFont = TTF_OpenFont("../assets/bebas.ttf", 100);
     numberFont = TTF_OpenFont("../assets/trans.ttf", 60);
     infoFont = TTF_OpenFont("../assets/bebas.ttf", 40);
     tempTexture = loadTexture("../assets/temp.png");
@@ -90,26 +90,22 @@ void Renderer::renderLoadThrottleBars(float load, float throttle) {
     const int barY = centerY - barHeight / 2 + 20;
     const int roundness = 15;      // Roundness of the corners
 
-    // Load bar
     const int loadBarX = centerX - radius - barWidth - 30;  // Adjust position
     SDL_Color loadColor;
     float loadRatio = load / 100.0f;
     int barOffset = 2;
     loadRatio = std::max(0.0f, std::min(1.0f, loadRatio)); // Clamp the value
 
-    // Smooth color change using linear interpolation
     SDL_Color green = {0, 255, 0, 255};
     SDL_Color yellow = {255, 255, 0, 255};
     SDL_Color red = {255, 0, 0, 255};
 
     if (loadRatio < 0.7f) {
-        // Green to yellow
         float ratio = loadRatio / 0.7f;
         loadColor.r = (Uint8)(green.r * (1 - ratio) + yellow.r * ratio);
         loadColor.g = (Uint8)(green.g * (1 - ratio) + yellow.g * ratio);
         loadColor.b = (Uint8)(green.b * (1 - ratio) + yellow.b * ratio);
     } else {
-        // Yellow to red
         float ratio = (loadRatio - 0.7f) / 0.3f;
         loadColor.r = (Uint8)(yellow.r * (1 - ratio) + red.r * ratio);
         loadColor.g = (Uint8)(yellow.g * (1 - ratio) + red.g * ratio);
@@ -141,12 +137,12 @@ void Renderer::renderLoadThrottleBars(float load, float throttle) {
     SDL_Rect throttleTextureRect = {throttleBarX - (textureWidth - barWidth) / 2, textureY, textureWidth, textureHeight};
     SDL_RenderCopy(renderer, throttleTexture, NULL, &throttleTextureRect);
 }
+
 void Renderer::renderGear(int gear) {
     std::string gearText = gear == 0 ? "N" : std::to_string(gear);
     SDL_Color outlineColor = {216, 67, 21, 255}; // Your orange/red outline
     SDL_Color fillColor = {0, 0, 0, 255};        // Black inside
 
-    // Render the text surface in white (we'll modulate color)
     SDL_Surface* gearSurface = TTF_RenderText_Blended(gearFont, gearText.c_str(), {255,255,255,255});
     SDL_Texture* gearTexture = SDL_CreateTextureFromSurface(renderer, gearSurface);
     SDL_Rect gearRect = {
@@ -156,7 +152,6 @@ void Renderer::renderGear(int gear) {
         gearSurface->h
     };
 
-    // Draw the outline (offsets around the center)
     SDL_SetTextureColorMod(gearTexture, outlineColor.r, outlineColor.g, outlineColor.b);
     for (int dx = -2; dx <= 5; ++dx) {
         for (int dy = -2; dy <= 5; ++dy) {
@@ -168,7 +163,6 @@ void Renderer::renderGear(int gear) {
         }
     }
 
-    // Draw the inside (center) in black
     SDL_SetTextureColorMod(gearTexture, fillColor.r, fillColor.g, fillColor.b);
     SDL_RenderCopy(renderer, gearTexture, nullptr, &gearRect);
 
@@ -189,7 +183,7 @@ void Renderer::renderSpeed(float speed) {
     SDL_Texture* speedTexture = SDL_CreateTextureFromSurface(renderer, speedSurface);
     SDL_Rect speedRect = {
         (width - speedSurface->w) / 2,
-        centerY + speedSurface->h / 2 + 50,
+        centerY + speedSurface->h / 2 + 20,
         speedSurface->w,
         speedSurface->h
     };
@@ -273,8 +267,7 @@ void Renderer::drawRPMNumbers() {
 
         SDL_Rect numberRect = {x - numberSurface->w / 2, y - numberSurface->h / 2, numberSurface->w, numberSurface->h};
 
-        // Render the outline of the text
-        SDL_Color outlineColor = {0, 0, 0, 255};  // Black outline color
+        SDL_Color outlineColor = {0, 0, 0, 255};
         SDL_SetTextureColorMod(numberTexture, outlineColor.r, outlineColor.g, outlineColor.b);
         for (int offsetX = -2; offsetX <= 2; ++offsetX) {
             for (int offsetY = -2; offsetY <= 2; ++offsetY) {
@@ -285,7 +278,6 @@ void Renderer::drawRPMNumbers() {
             }
         }
 
-        // Render the actual text
         SDL_SetTextureColorMod(numberTexture, numberColor.r, numberColor.g, numberColor.b);
         SDL_RenderCopy(renderer, numberTexture, NULL, &numberRect);
 
