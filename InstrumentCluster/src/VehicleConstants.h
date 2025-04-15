@@ -22,7 +22,7 @@ const std::array<float, 7> GEAR_RATIOS = {
 struct VehicleData {
     int currentGear = 0;
     int currentRpm = 0;
-    float currentTemp = 0.0f;
+    float currentCoolantTemp = 0.0f;
     float currentThrottle = 0.0f;
     float currentLoad = 0.0f;
     float currentAmbient = 0.0f;

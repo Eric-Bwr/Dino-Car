@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <cmath>
+#include <iomanip>
 #include <SDL2/SDL2_gfxPrimitives.h>
 #include <SDL2/SDL_image.h>
 
@@ -61,6 +62,7 @@ void Renderer::start(){
     gearFont = TTF_OpenFont("../assets/trans.ttf", 270);
     speedFont = TTF_OpenFont("../assets/trans.ttf", 100);
     numberFont = TTF_OpenFont("../assets/trans.ttf", 60);
+    infoFont = TTF_OpenFont("../assets/bebas.ttf", 40);
     tempTexture = loadTexture("../assets/temp.png");
     coolantTexture = loadTexture("../assets/coolant.png");
     engineLoadTexture = loadTexture("../assets/load.png");
@@ -75,26 +77,7 @@ void Renderer::render(const VehicleData& data, float speed){
     renderSpeed(speed);
     renderRPM(data.currentRpm);
 
-    SDL_Rect destRect;
-    destRect.x = 100;
-    destRect.y = 100;
-    destRect.w = 50;
-    destRect.h = 50;
-    SDL_RenderCopy(renderer, coolantTexture, NULL, &destRect);
-
-
-    SDL_Rect destRect3;
-    destRect3.x = 120;
-    destRect3.y = 50;
-    destRect3.w = 50;
-    destRect3.h = 50;
-    SDL_RenderCopy(renderer, batteryTexture, NULL, &destRect3);
-    SDL_Rect destRect4;
-    destRect3.x = 120;
-    destRect3.y = 300;
-    destRect3.w = 50;
-    destRect3.h = 50;
-    SDL_RenderCopy(renderer, tempTexture, NULL, &destRect3);
+    renderInfoTexts(data.currentAmbient, data.currentCoolantTemp, data.currentVoltage);
 
     renderLoadThrottleBars(data.currentLoad, data.currentThrottle);
 
@@ -333,3 +316,37 @@ SDL_Texture* Renderer::loadTexture(const std::string& filePath) {
     }
     return texture;
 }
+
+void Renderer::renderInfoTexts(float ambientTemp, float coolantTemp, float batteryVoltage) {
+    auto renderInfoTextWithIcon = [&](SDL_Texture* iconTexture, int x, int y, float value, const std::string& label, const SDL_Color& color) {
+        int iconSize = 32;
+        SDL_Rect iconRect = {x, y, iconSize, iconSize};
+        SDL_RenderCopy(renderer, iconTexture, NULL, &iconRect);
+
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(1) << value << " " << label;
+        std::string text = ss.str();
+
+        SDL_Surface* textSurface = TTF_RenderText_Blended(infoFont, text.c_str(), color);
+        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+
+        SDL_Rect textRect = {x + iconSize + 5, y + (iconSize - textSurface->h) / 2, textSurface->w, textSurface->h};
+        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+
+        SDL_FreeSurface(textSurface);
+        SDL_DestroyTexture(textTexture);
+    };
+    int iconSize = 32;
+    int x = 40;
+    int y = 30;
+    int yOffset = iconSize + 10;
+    SDL_Color textColor = {255, 255, 255, 255};
+    SDL_Color batteryColor = (batteryVoltage < 12.0) ? SDL_Color{255, 255, 0, 255} : textColor;
+    renderInfoTextWithIcon(batteryTexture, width - 160, y, batteryVoltage, "V", batteryColor);
+
+    renderInfoTextWithIcon(tempTexture, x, y, ambientTemp, "", textColor);
+    y += yOffset;
+    renderInfoTextWithIcon(coolantTexture, x, y, coolantTemp, "", textColor);
+}
+
+

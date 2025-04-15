@@ -72,7 +72,7 @@ void Arduino::readSerial() {
                 if (std::regex_search(buffer, match, re) && match.size() == 7) {
                     data.currentGear = std::stoi(match[1]);
                     data.currentRpm = std::stoi(match[2]);
-                    data.currentTemp = std::stof(match[3]);
+                    data.currentCoolantTemp = std::stof(match[3]);
                     data.currentThrottle = std::stof(match[4]);
                     data.currentLoad = std::stof(match[5]);
                     data.currentAmbient = std::stof(match[6]);

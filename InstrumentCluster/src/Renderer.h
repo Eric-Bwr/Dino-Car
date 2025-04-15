@@ -20,12 +20,14 @@ private:
     void drawRPMNumbers();
     void renderTemperatureGauge(float temperature, const std::string& label, int x, int y);
     void renderLoadThrottleBars(float load, float throttle);
+    void renderInfoTexts(float ambientTemp, float coolantTemp, float batteryVoltage);
     SDL_Texture* loadTexture(const std::string& filePath);
     SDL_Window* window;
     SDL_Renderer* renderer;
     TTF_Font* gearFont;
     TTF_Font* speedFont;
     TTF_Font* numberFont;
+    TTF_Font* infoFont;
     SDL_Texture* tempTexture;
     SDL_Texture* coolantTexture;
     SDL_Texture* engineLoadTexture;
