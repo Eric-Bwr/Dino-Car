@@ -64,7 +64,9 @@ std::string Arduino::findArduinoPort() {
 
     throw std::runtime_error("No Arduino found");
 }
+
 void Arduino::readSerial() {
+    // "G:0,R:0,T:19.70,Th:10.98,L:0.00,A:21.00"
     std::string buffer;
     char c;
     while (isRunning) {
