@@ -22,7 +22,7 @@ int main() {
 
     VehicleData data;
     while (true) {
-#if IS_RASPI
+#if not IS_RASPI
         data.currentRpm += 100;
         if (data.currentRpm > RPM_MAX) {
             data.currentGear++;
