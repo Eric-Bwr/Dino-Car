@@ -227,7 +227,7 @@ void Renderer::drawRPMArc(float startAngle, float endAngle, SDL_Color color) {
 void Renderer::drawRPMNumbers() {
     const int numNumbers = 12;
     const float angleStep = (END_ANGLE - START_ANGLE) / numNumbers;
-    const int numberRadius = innerRadius + (radius - innerRadius) / 2.05;
+    const int numberRadius = innerRadius + (radius - innerRadius) / 2.0;
 
     for (int i = 0; i <= numNumbers; ++i) {
         float angle = END_ANGLE - i * angleStep;
@@ -245,7 +245,7 @@ void Renderer::drawRPMNumbers() {
 
         SDL_Surface* numberSurface = TTF_RenderText_Blended(numberFont, numberText.c_str(), numberColor);
         SDL_Texture* numberTexture = SDL_CreateTextureFromSurface(renderer, numberSurface);
-        SDL_Rect numberRect = {x - numberSurface->w / 2, y - numberSurface->h / 2, numberSurface->w, numberSurface->h};
+        SDL_Rect numberRect = {x - numberSurface->w / 2, y - numberSurface->h / 2 + 8, numberSurface->w, numberSurface->h};
         SDL_Color outlineColor = {0, 0, 0, 255};
         SDL_SetTextureColorMod(numberTexture, outlineColor.r, outlineColor.g, outlineColor.b);
 
