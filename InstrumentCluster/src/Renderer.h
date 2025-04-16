@@ -28,6 +28,7 @@ private:
     TTF_Font* speedFont;
     TTF_Font* numberFont;
     TTF_Font* infoFont;
+    SDL_Texture* bgTexture;
     SDL_Texture* tempTexture;
     SDL_Texture* coolantTexture;
     SDL_Texture* engineLoadTexture;

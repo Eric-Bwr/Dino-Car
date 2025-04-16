@@ -63,6 +63,7 @@ void Renderer::start(){
     speedFont = TTF_OpenFont("../assets/bebas.ttf", 100);
     numberFont = TTF_OpenFont("../assets/trans.ttf", 60);
     infoFont = TTF_OpenFont("../assets/bebas.ttf", 40);
+    bgTexture = loadTexture("../assets/bg.png");
     tempTexture = loadTexture("../assets/temp.png");
     coolantTexture = loadTexture("../assets/coolant.png");
     engineLoadTexture = loadTexture("../assets/load.png");
@@ -71,31 +72,27 @@ void Renderer::start(){
 }
 
 void Renderer::render(const VehicleData& data, float speed){
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
+    SDL_Rect bgRect = {0, 0, width, height};
+    SDL_RenderCopy(renderer, bgTexture, NULL, &bgRect);
     renderGear(data.currentGear);
     renderSpeed(speed);
     renderRPM(data.currentRpm);
-
     renderInfoTexts(data.currentAmbient, data.currentCoolantTemp, data.currentVoltage);
-
     renderLoadThrottleBars(data.currentLoad, data.currentThrottle);
-
     SDL_RenderPresent(renderer);
 }
 
 void Renderer::renderLoadThrottleBars(float load, float throttle) {
-    const int barWidth = 80;         // Increased bar width
-    const int barHeight = 280;        // Increased bar height
+    const int barWidth = 80;
+    const int barHeight = 280;
     const int barY = centerY - barHeight / 2 + 20;
-    const int roundness = 15;      // Roundness of the corners
-
-    const int loadBarX = centerX - radius - barWidth - 30;  // Adjust position
+    const int roundness = 15;
+    const int loadBarX = centerX - radius - barWidth - 30;
     SDL_Color loadColor;
     float loadRatio = load / 100.0f;
     int barOffset = 2;
-    loadRatio = std::max(0.0f, std::min(1.0f, loadRatio)); // Clamp the value
-
+    loadRatio = std::max(0.0f, std::min(1.0f, loadRatio));
     SDL_Color green = {0, 255, 0, 255};
     SDL_Color yellow = {255, 255, 0, 255};
     SDL_Color red = {255, 0, 0, 255};
@@ -112,37 +109,28 @@ void Renderer::renderLoadThrottleBars(float load, float throttle) {
         loadColor.b = (Uint8)(yellow.b * (1 - ratio) + red.b * ratio);
     }
 
-    roundedBoxRGBA(renderer, loadBarX - barOffset, barY - barOffset, loadBarX + barWidth + barOffset, barY + barHeight + barOffset, roundness, 255, 255, 255, 255);
-
+    roundedBoxRGBA(renderer, loadBarX - barOffset, barY - barOffset, loadBarX + barWidth + barOffset, barY + barHeight + barOffset, roundness, 20, 20, 20, 200);
     int fillHeight = static_cast<int>(barHeight * loadRatio);
-
-    roundedBoxRGBA(renderer, loadBarX, barY + barHeight - fillHeight, loadBarX + barWidth, barY + barHeight, roundness, loadColor.r, loadColor.g, loadColor.b, 255);
+    roundedBoxRGBA(renderer, loadBarX, barY + barHeight - fillHeight, loadBarX + barWidth, barY + barHeight, roundness, loadColor.r, loadColor.g, loadColor.b, 200);
 
     const int throttleBarX = centerX + radius + 30;
-    roundedBoxRGBA(renderer, throttleBarX - barOffset, barY - barOffset, throttleBarX + barWidth + barOffset, barY + barHeight + barOffset, roundness, 255, 255, 255, 255);
-
-    // Render rounded rectangle for the throttle bar fill
+    roundedBoxRGBA(renderer, throttleBarX - barOffset, barY - barOffset, throttleBarX + barWidth + barOffset, barY + barHeight + barOffset, roundness, 20, 20, 20, 200);
     int throttleFillHeight = static_cast<int>(barHeight * throttle / 100.0f);
-    roundedBoxRGBA(renderer, throttleBarX, barY + barHeight - throttleFillHeight, throttleBarX + barWidth, barY + barHeight, roundness, 0, 0, 255, 255);
+    roundedBoxRGBA(renderer, throttleBarX, barY + barHeight - throttleFillHeight, throttleBarX + barWidth, barY + barHeight, roundness, 0, 0, 255, 200);
 
-    const int textureWidth = 60;       // Increased texture size
-    const int textureHeight = 60;      // Increased texture size
+    const int textureWidth = 60;
+    const int textureHeight = 60;
     const int textureY = barY + barHeight + 10;
-
-    // Load texture
     SDL_Rect loadTextureRect = {loadBarX - (textureWidth - barWidth) / 2, textureY, textureWidth, textureHeight};
     SDL_RenderCopy(renderer, engineLoadTexture, NULL, &loadTextureRect);
-
-    // Throttle texture
     SDL_Rect throttleTextureRect = {throttleBarX - (textureWidth - barWidth) / 2, textureY, textureWidth, textureHeight};
     SDL_RenderCopy(renderer, throttleTexture, NULL, &throttleTextureRect);
 }
 
 void Renderer::renderGear(int gear) {
     std::string gearText = gear == 0 ? "N" : std::to_string(gear);
-    SDL_Color outlineColor = {216, 67, 21, 255}; // Your orange/red outline
-    SDL_Color fillColor = {0, 0, 0, 255};        // Black inside
-
+    SDL_Color outlineColor = {216, 67, 21, 255};
+    SDL_Color fillColor = {0, 0, 0, 255};
     SDL_Surface* gearSurface = TTF_RenderText_Blended(gearFont, gearText.c_str(), {255,255,255,255});
     SDL_Texture* gearTexture = SDL_CreateTextureFromSurface(renderer, gearSurface);
     SDL_Rect gearRect = {
@@ -155,7 +143,7 @@ void Renderer::renderGear(int gear) {
     SDL_SetTextureColorMod(gearTexture, outlineColor.r, outlineColor.g, outlineColor.b);
     for (int dx = -2; dx <= 5; ++dx) {
         for (int dy = -2; dy <= 5; ++dy) {
-            if (dx == 0 && dy == 0) continue; // skip center
+            if (dx == 0 && dy == 0) continue;
             SDL_Rect outlineRect = gearRect;
             outlineRect.x += dx;
             outlineRect.y += dy;
@@ -165,7 +153,6 @@ void Renderer::renderGear(int gear) {
 
     SDL_SetTextureColorMod(gearTexture, fillColor.r, fillColor.g, fillColor.b);
     SDL_RenderCopy(renderer, gearTexture, nullptr, &gearRect);
-
     SDL_FreeSurface(gearSurface);
     SDL_DestroyTexture(gearTexture);
 }
@@ -177,7 +164,6 @@ void Renderer::renderSpeed(float speed) {
     speedOss.fill('0');
     speedOss << intSpeed;
     std::string speedText = speedOss.str();
-
     const SDL_Color speedColor = {255, 255, 255, 255};
     SDL_Surface* speedSurface = TTF_RenderText_Blended(speedFont, speedText.c_str(), speedColor);
     SDL_Texture* speedTexture = SDL_CreateTextureFromSurface(renderer, speedSurface);
@@ -194,10 +180,8 @@ void Renderer::renderSpeed(float speed) {
 
 void Renderer::renderRPM(int rpm) {
     float rpmRatio = static_cast<float>(rpm) / RPM_MAX;
-
-    SDL_Color rpmColor = {216, 67, 21, 200};
-
-    SDL_Color rpmBackColor = {50, 50, 50, 255};
+    SDL_Color rpmColor = {216, 67, 21, 150};
+    SDL_Color rpmBackColor = {50, 50, 50, 100};
 
     drawRPMArc(START_ANGLE, END_ANGLE, rpmBackColor);
     drawRPMArc(END_ANGLE, START_ANGLE - (START_ANGLE - END_ANGLE) * (1.0 - rpmRatio), rpmColor);
@@ -211,7 +195,6 @@ void Renderer::drawRPMArc(float startAngle, float endAngle, SDL_Color color) {
     Sint16 outerVy[numPoints];
     Sint16 innerVx[numPoints];
     Sint16 innerVy[numPoints];
-
     float angleRange = startAngle - endAngle;
 
     for (int i = 0; i < numPoints; ++i) {
@@ -249,13 +232,11 @@ void Renderer::drawRPMNumbers() {
     for (int i = 0; i <= numNumbers; ++i) {
         float angle = END_ANGLE - i * angleStep;
         float angleRad = angle * M_PI / 180.0f;
-
         int x = centerX - numberRadius * cosf(angleRad);
         int y = centerY + numberRadius * sinf(angleRad);
-
         std::string numberText = std::to_string(i);
-
         SDL_Color numberColor;
+
         if (i == 11 || i == 12) {
             numberColor = {255, 0, 0, 255};
         } else {
@@ -264,11 +245,10 @@ void Renderer::drawRPMNumbers() {
 
         SDL_Surface* numberSurface = TTF_RenderText_Blended(numberFont, numberText.c_str(), numberColor);
         SDL_Texture* numberTexture = SDL_CreateTextureFromSurface(renderer, numberSurface);
-
         SDL_Rect numberRect = {x - numberSurface->w / 2, y - numberSurface->h / 2, numberSurface->w, numberSurface->h};
-
         SDL_Color outlineColor = {0, 0, 0, 255};
         SDL_SetTextureColorMod(numberTexture, outlineColor.r, outlineColor.g, outlineColor.b);
+
         for (int offsetX = -2; offsetX <= 2; ++offsetX) {
             for (int offsetY = -2; offsetY <= 2; ++offsetY) {
                 SDL_Rect outlineRect = numberRect;
@@ -280,32 +260,29 @@ void Renderer::drawRPMNumbers() {
 
         SDL_SetTextureColorMod(numberTexture, numberColor.r, numberColor.g, numberColor.b);
         SDL_RenderCopy(renderer, numberTexture, NULL, &numberRect);
-
         SDL_FreeSurface(numberSurface);
         SDL_DestroyTexture(numberTexture);
     }
 }
 
-
 void Renderer::drawNeedle(float rpmRatio) {
     float angle = START_ANGLE - (START_ANGLE - END_ANGLE) * (1.0 - rpmRatio);
     float angleRad = angle * M_PI / 180.0f;
-
     int startX = centerX - innerRadius * cosf(angleRad);
     int startY = centerY + innerRadius * sinf(angleRad);
     int endX = centerX - radius * cosf(angleRad);
     int endY = centerY + radius * sinf(angleRad);
-
     SDL_Color needleColor = {255, 0, 0, 255};
-
     thickLineRGBA(renderer, startX, startY, endX, endY, 3, needleColor.r, needleColor.g, needleColor.b, needleColor.a);
 }
 
 SDL_Texture* Renderer::loadTexture(const std::string& filePath) {
     SDL_Texture* texture = IMG_LoadTexture(renderer, filePath.c_str());
+
     if (!texture) {
         std::cerr << "IMG_LoadTexture Error: " << IMG_GetError() << std::endl;
     }
+
     return texture;
 }
 
@@ -314,17 +291,13 @@ void Renderer::renderInfoTexts(float ambientTemp, float coolantTemp, float batte
         int iconSize = 32;
         SDL_Rect iconRect = {x, y, iconSize, iconSize};
         SDL_RenderCopy(renderer, iconTexture, NULL, &iconRect);
-
         std::stringstream ss;
         ss << std::fixed << std::setprecision(1) << value << " " << label;
         std::string text = ss.str();
-
         SDL_Surface* textSurface = TTF_RenderText_Blended(infoFont, text.c_str(), color);
         SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-
         SDL_Rect textRect = {x + iconSize + 5, y + (iconSize - textSurface->h) / 2, textSurface->w, textSurface->h};
         SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
-
         SDL_FreeSurface(textSurface);
         SDL_DestroyTexture(textTexture);
     };
@@ -335,10 +308,7 @@ void Renderer::renderInfoTexts(float ambientTemp, float coolantTemp, float batte
     SDL_Color textColor = {255, 255, 255, 255};
     SDL_Color batteryColor = (batteryVoltage < 12.0) ? SDL_Color{255, 255, 0, 255} : textColor;
     renderInfoTextWithIcon(batteryTexture, width - 160, y, batteryVoltage, "V", batteryColor);
-
     renderInfoTextWithIcon(tempTexture, x, y, ambientTemp, "", textColor);
     y += yOffset;
     renderInfoTextWithIcon(coolantTexture, x, y, coolantTemp, "", textColor);
 }
-
-
