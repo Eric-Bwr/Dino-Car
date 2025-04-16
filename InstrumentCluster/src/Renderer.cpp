@@ -115,7 +115,7 @@ void Renderer::renderLoadThrottleBars(float load, float throttle) {
 
     const int throttleBarX = centerX + radius + 30;
     roundedBoxRGBA(renderer, throttleBarX - barOffset, barY - barOffset, throttleBarX + barWidth + barOffset, barY + barHeight + barOffset, roundness, 20, 20, 20, 200);
-    int throttleFillHeight = static_cast<int>(barHeight * throttle / 100.0f);
+    int throttleFillHeight = static_cast<int>(barHeight * throttle / 80.0f);
     roundedBoxRGBA(renderer, throttleBarX, barY + barHeight - throttleFillHeight, throttleBarX + barWidth, barY + barHeight, roundness, 0, 0, 255, 200);
 
     const int textureWidth = 60;

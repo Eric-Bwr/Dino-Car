@@ -53,13 +53,13 @@ void readCAN() {
 }
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   while (!Serial);
   if (!CAN.begin(1E6)) while (1);
 }
 
 void loop() {
-  if (millis() - lastRequestTime >= 50) {
+  if (millis() - lastRequestTime >= 20) {
     lastRequestTime = millis();
     sendPIDRequest();
   }

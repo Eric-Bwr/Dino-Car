@@ -25,7 +25,7 @@ void Arduino::start() {
             std::string chosenPort = findArduinoPort();
             std::cout << "Arduino on: " << chosenPort << std::endl;
             serialPort.open(chosenPort);
-            serialPort.set_option(boost::asio::serial_port_base::baud_rate(9600));
+            serialPort.set_option(boost::asio::serial_port_base::baud_rate(115200));
             readSerial();
         } catch (const std::exception& e) {
             std::cerr << "Arduino connection failed: " << e.what() << std::endl;
