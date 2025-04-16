@@ -5,7 +5,6 @@
 
 Arduino::Arduino() :
     isRunning(false),
-    data(),
     serialPort(ioContext) {}
 
 Arduino::~Arduino() {
@@ -69,7 +68,7 @@ void Arduino::readSerial() {
             boost::asio::read(serialPort, boost::asio::buffer(&c, 1));
             if (c == '\n') {
                 std::smatch match;
-                if (std::regex_search(buffer, match, re) && match.size() == 7) {
+                if (std::regex_search(buffer, match, re) && match.size() == 8) {
                     data.currentGear = std::stoi(match[1]);
                     data.currentRpm = std::stoi(match[2]);
                     data.currentCoolantTemp = std::stof(match[3]);

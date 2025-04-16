@@ -75,7 +75,7 @@ void loop() {
   int sensorValue = analogRead(batteryPin);
   float voltage = sensorValue * (5.0 / 1023.0);
   batteryVoltage = voltage * ((R1 + R2) / R2);
-  if (millis() - lastRequestTime >= 20) {
+  if (millis() - lastRequestTime >= 5) {
     lastRequestTime = millis();
     sendPIDRequest();
   }
@@ -102,6 +102,4 @@ void loop() {
     gearServo.detach();
     servoAttached = false;
   }
-
-  delay(10);
 }

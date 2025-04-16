@@ -72,14 +72,18 @@ void Renderer::start(){
 }
 
 void Renderer::render(const VehicleData& data, float speed){
+    smoothedRpm = smoothingFactor * data.currentRpm + (1 - smoothingFactor) * smoothedRpm;
+    smoothedLoad = smoothingFactor * data.currentLoad + (1 - smoothingFactor) * smoothedLoad;
+    smoothedThrottle = smoothingFactor * data.currentThrottle + (1 - smoothingFactor) * smoothedThrottle;
+
     SDL_RenderClear(renderer);
     SDL_Rect bgRect = {0, 0, width, height};
     SDL_RenderCopy(renderer, bgTexture, NULL, &bgRect);
     renderGear(data.currentGear);
     renderSpeed(speed);
-    renderRPM(data.currentRpm);
+    renderRPM(static_cast<int>(smoothedRpm));
     renderInfoTexts(data.currentAmbient, data.currentCoolantTemp, data.currentVoltage);
-    renderLoadThrottleBars(data.currentLoad, data.currentThrottle);
+    renderLoadThrottleBars(smoothedLoad, smoothedThrottle);
     SDL_RenderPresent(renderer);
 }
 

@@ -38,4 +38,8 @@ private:
     int width, height;
     int centerX, centerY;
     int radius, innerRadius;
+    float smoothedRpm = 0.0f;
+    float smoothedLoad = 0.0f;
+    float smoothedThrottle = 0.0f;
+    const float smoothingFactor = 0.7f;
 };
