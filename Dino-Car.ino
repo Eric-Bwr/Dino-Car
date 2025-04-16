@@ -1,4 +1,11 @@
 #include <CAN.h>
+#include <Servo.h>
+
+Servo gearServo;
+int gearServoPos = 90;
+const int gearServoPin = 3;
+unsigned long lastServoCommandTime = 0;
+bool servoAttached = false;
 
 unsigned long lastRequestTime = 0;
 int currentPIDIndex = 0;
@@ -73,5 +80,28 @@ void loop() {
     sendPIDRequest();
   }
   readCAN();
+
+  if (Serial.available()) {
+    String input = Serial.readStringUntil('\n');
+    input.trim();
+    if (input.startsWith("G:")) {
+      int pos = input.substring(2).toInt();
+      if (pos >= 0 && pos <= 180) {
+        if (!servoAttached) {
+          gearServo.attach(gearServoPin);
+          servoAttached = true;
+        }
+        gearServo.write(pos);
+        gearServoPos = pos;
+        lastServoCommandTime = millis();
+      }
+    }
+  }
+
+  if (servoAttached && (millis() - lastServoCommandTime > 1000)) {
+    gearServo.detach();
+    servoAttached = false;
+  }
+
   delay(10);
 }
