@@ -62,7 +62,7 @@ std::string Arduino::findArduinoPort() {
 
 void Arduino::readSerial() {
     std::string buffer;
-    std::regex re(R"(G:(\d+),R:(\d+),T:([\d\.]+),Th:([\d\.]+),L:([\d\.]+),A:([\d\.]+))");
+    std::regex re(R"(G:(\d+),R:(\d+),T:([\d\.]+),Th:([\d\.]+),L:([\d\.]+),A:([\d\.]+),V:([\d\.]+))");
     char c;
     while (isRunning) {
         try {
@@ -76,6 +76,7 @@ void Arduino::readSerial() {
                     data.currentThrottle = std::stof(match[4]);
                     data.currentLoad = std::stof(match[5]);
                     data.currentAmbient = std::stof(match[6]);
+                    data.currentVoltage = std::stof(match[7]);
                 }
                 buffer.clear();
             } else {

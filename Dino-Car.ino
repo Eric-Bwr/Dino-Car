@@ -6,9 +6,14 @@ int currentPIDIndex = 0;
 const uint8_t pidList[] = { 0x11, 0x0F, 0x04 };
 const int numPIDs = sizeof(pidList);
 
+const int batteryPin = A0;
+const float R1 = 47000.0; // 47k ohm
+const float R2 = 10000.0; // 10k ohm
+
 float throttle = -1;
 float ambiTemp = -1;
 float engineLoad = -1;
+float batteryVoltage = -1;
 
 void sendPIDRequest() {
   uint8_t frame[8] = { 0x02, 0x01, pidList[currentPIDIndex], 0, 0, 0, 0, 0 };
@@ -40,7 +45,8 @@ void handleCustom540(uint8_t* data) {
   Serial.print(",T:"); Serial.print(temp);
   Serial.print(",Th:"); Serial.print(throttle);
   Serial.print(",L:"); Serial.print(engineLoad);
-  Serial.print(",A:"); Serial.println(ambiTemp);
+  Serial.print(",A:"); Serial.print(ambiTemp);
+  Serial.print(",V:"); Serial.println(batteryVoltage);
 }
 
 void readCAN() {
@@ -59,9 +65,13 @@ void setup() {
 }
 
 void loop() {
+  int sensorValue = analogRead(batteryPin);
+  float voltage = sensorValue * (5.0 / 1023.0);
+  batteryVoltage = voltage * ((R1 + R2) / R2);
   if (millis() - lastRequestTime >= 20) {
     lastRequestTime = millis();
     sendPIDRequest();
   }
   readCAN();
+  delay(10);
 }

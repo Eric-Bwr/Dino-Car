@@ -35,7 +35,7 @@ int main() {
         data.currentVoltage = 11.9;
         data.currentCoolantTemp = 14.7;
         data.currentLoad = ((float)data.currentRpm / RPM_MAX) * 100.0f;
-        data.currentThrottle = ((float)data.currentRpm / RPM_MAX) * 100.0f;
+        data.currentThrottle = ((float)data.currentRpm / RPM_MAX) * 80.0f;
 #else
         data = arduino.getData();
 #endif
