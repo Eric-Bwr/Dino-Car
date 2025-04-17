@@ -188,13 +188,13 @@ void Renderer::renderRPM(int rpm) {
     SDL_Color rpmColor = {216, 67, 21, 150};
     SDL_Color rpmBackColor = {50, 50, 50, 100};
 
-    drawRPMArc(START_ANGLE, END_ANGLE, rpmBackColor);
-    drawRPMArc(END_ANGLE, START_ANGLE - (START_ANGLE - END_ANGLE) * (1.0 - rpmRatio), rpmColor);
+    drawRPMArc(START_ANGLE, END_ANGLE, rpmBackColor, true);
+    drawRPMArc(END_ANGLE, START_ANGLE - (START_ANGLE - END_ANGLE) * (1.0 - rpmRatio), rpmColor, false);
     drawRPMNumbers();
     drawNeedle(rpmRatio);
 }
 
-void Renderer::drawRPMArc(float startAngle, float endAngle, SDL_Color color) {
+void Renderer::drawRPMArc(float startAngle, float endAngle, SDL_Color color, bool ticks) {
     int numPoints = 1000;
     Sint16 outerVx[numPoints];
     Sint16 outerVy[numPoints];
@@ -227,6 +227,21 @@ void Renderer::drawRPMArc(float startAngle, float endAngle, SDL_Color color) {
     }
 
     filledPolygonRGBA(renderer, allVx, allVy, 2 * numPoints, color.r, color.g, color.b, color.a);
+
+    if (!ticks){
+        return;
+    }
+
+    int numTicks = 24;
+    for (int i = 0; i <= numTicks; ++i) {
+        float tickAngle = startAngle - ((float)i / (float)numTicks) * angleRange;
+        float tickAngleRad = tickAngle * M_PI / 180.0f;
+        int tickOuterX = centerX - radius * cosf(tickAngleRad);
+        int tickOuterY = centerY + radius * sinf(tickAngleRad);
+        int tickInnerX = centerX - (radius - 10) * cosf(tickAngleRad);
+        int tickInnerY = centerY + (radius - 10) * sinf(tickAngleRad);
+        thickLineRGBA(renderer, tickOuterX, tickOuterY, tickInnerX, tickInnerY, 4, 160, 160, 160, 200);
+    }
 }
 
 void Renderer::drawRPMNumbers() {

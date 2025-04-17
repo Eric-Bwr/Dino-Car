@@ -16,7 +16,7 @@ private:
     void renderSpeed(float speed);
     void renderRPM(int rpm);
     void drawNeedle(float rpmRatio);
-    void drawRPMArc(float startAngle, float endAngle, SDL_Color color);
+    void drawRPMArc(float startAngle, float endAngle, SDL_Color color, bool ticks);
     void drawRPMNumbers();
     void renderLoadThrottleBars(float load, float throttle);
     void renderInfoTexts(float ambientTemp, float coolantTemp, float batteryVoltage, bool clutchPressed);
