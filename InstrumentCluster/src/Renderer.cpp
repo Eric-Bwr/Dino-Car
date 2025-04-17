@@ -69,12 +69,13 @@ void Renderer::start(){
     engineLoadTexture = loadTexture("../assets/load.png");
     batteryTexture = loadTexture("../assets/battery.png");
     throttleTexture = loadTexture("../assets/throttle.png");
+    clutchTexture = loadTexture("../assets/clutch.png");
 }
 
 void Renderer::render(const VehicleData& data, float speed){
-    smoothedRpm = smoothingFactor * data.currentRpm + (1 - smoothingFactor) * smoothedRpm;
-    smoothedLoad = smoothingFactor * data.currentLoad + (1 - smoothingFactor) * smoothedLoad;
-    smoothedThrottle = smoothingFactor * data.currentThrottle + (1 - smoothingFactor) * smoothedThrottle;
+    smoothedRpm = smoothingFactor * data.engineRpm + (1 - smoothingFactor) * smoothedRpm;
+    smoothedLoad = smoothingFactor * data.engineLoad + (1 - smoothingFactor) * smoothedLoad;
+    smoothedThrottle = smoothingFactor * data.throttle + (1 - smoothingFactor) * smoothedThrottle;
 
     SDL_RenderClear(renderer);
     SDL_Rect bgRect = {0, 0, width, height};
@@ -82,7 +83,7 @@ void Renderer::render(const VehicleData& data, float speed){
     renderGear(data.currentGear);
     renderSpeed(speed);
     renderRPM(static_cast<int>(smoothedRpm));
-    renderInfoTexts(data.currentAmbient, data.currentCoolantTemp, data.currentVoltage);
+    renderInfoTexts(data.ambientTemp, data.coolantTemp, data.voltage, data.clutchPressed);
     renderLoadThrottleBars(smoothedLoad, smoothedThrottle);
     SDL_RenderPresent(renderer);
 }
@@ -290,11 +291,14 @@ SDL_Texture* Renderer::loadTexture(const std::string& filePath) {
     return texture;
 }
 
-void Renderer::renderInfoTexts(float ambientTemp, float coolantTemp, float batteryVoltage) {
+void Renderer::renderInfoTexts(float ambientTemp, float coolantTemp, float batteryVoltage, bool clutchPressed) {
+    auto renderIcon = [&](SDL_Texture* iconTexture, int x, int y, int size){
+        SDL_Rect iconRect = {x, y, size, size};
+        SDL_RenderCopy(renderer, iconTexture, NULL, &iconRect);
+    };
     auto renderInfoTextWithIcon = [&](SDL_Texture* iconTexture, int x, int y, float value, const std::string& label, const SDL_Color& color) {
         int iconSize = 32;
-        SDL_Rect iconRect = {x, y, iconSize, iconSize};
-        SDL_RenderCopy(renderer, iconTexture, NULL, &iconRect);
+        renderIcon(iconTexture, x, y, iconSize);
         std::stringstream ss;
         ss << std::fixed << std::setprecision(1) << value << " " << label;
         std::string text = ss.str();
@@ -307,12 +311,28 @@ void Renderer::renderInfoTexts(float ambientTemp, float coolantTemp, float batte
     };
     int iconSize = 32;
     int x = 40;
-    int y = 30;
+    int y = 20;
     int yOffset = iconSize + 10;
-    SDL_Color textColor = {255, 255, 255, 255};
-    SDL_Color batteryColor = (batteryVoltage < 12.0) ? SDL_Color{255, 255, 0, 255} : textColor;
+
+    SDL_Color batteryColor =
+            (batteryVoltage < 11.0) ? SDL_Color{255, 20, 20, 255} :
+            (batteryVoltage < 12.0) ? SDL_Color{255, 255, 20, 255} :
+            SDL_Color{20, 255, 20, 255};
+    SDL_SetTextureColorMod(batteryTexture, batteryColor.r, batteryColor.g, batteryColor.b);
     renderInfoTextWithIcon(batteryTexture, width - 160, y, batteryVoltage, "V", batteryColor);
-    renderInfoTextWithIcon(tempTexture, x, y, ambientTemp, "", textColor);
+
+    renderInfoTextWithIcon(tempTexture, x, y, ambientTemp, "C", SDL_Color{255, 255, 255, 255});
+
     y += yOffset;
-    renderInfoTextWithIcon(coolantTexture, x, y, coolantTemp, "", textColor);
+
+    SDL_Color coolantTempColor =
+            (coolantTemp > 60.0f) ? SDL_Color{255, 20, 20, 255} :
+            (coolantTemp > 40.0f) ? SDL_Color{255, 255, 20, 255} :
+            SDL_Color{255, 255, 255, 255};
+    SDL_SetTextureColorMod(coolantTexture, coolantTempColor.r, coolantTempColor.g, coolantTempColor.b);
+    renderInfoTextWithIcon(coolantTexture, x, y, coolantTemp, "C", coolantTempColor);
+
+    SDL_Color clutchColor = clutchPressed ? SDL_Color{20, 255, 20, 255} : SDL_Color{255, 255, 255, 255};
+    SDL_SetTextureColorMod(clutchTexture, clutchColor.r, clutchColor.g, clutchColor.b);
+    renderIcon(clutchTexture, width - 80, y, 40);
 }

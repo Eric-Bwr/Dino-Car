@@ -70,12 +70,12 @@ void Arduino::readSerial() {
                 std::smatch match;
                 if (std::regex_search(buffer, match, re) && match.size() == 8) {
                     data.currentGear = std::stoi(match[1]);
-                    data.currentRpm = std::stoi(match[2]);
-                    data.currentCoolantTemp = std::stof(match[3]);
-                    data.currentThrottle = std::stof(match[4]);
-                    data.currentLoad = std::stof(match[5]);
-                    data.currentAmbient = std::stof(match[6]);
-                    data.currentVoltage = std::stof(match[7]);
+                    data.engineRpm = std::stoi(match[2]);
+                    data.coolantTemp = std::stof(match[3]);
+                    data.throttle = std::stof(match[4]);
+                    data.engineLoad = std::stof(match[5]);
+                    data.ambientTemp = std::stof(match[6]);
+                    data.voltage = std::stof(match[7]);
                 }
                 buffer.clear();
             } else {

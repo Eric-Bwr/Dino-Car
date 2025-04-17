@@ -18,9 +18,8 @@ private:
     void drawNeedle(float rpmRatio);
     void drawRPMArc(float startAngle, float endAngle, SDL_Color color);
     void drawRPMNumbers();
-    void renderTemperatureGauge(float temperature, const std::string& label, int x, int y);
     void renderLoadThrottleBars(float load, float throttle);
-    void renderInfoTexts(float ambientTemp, float coolantTemp, float batteryVoltage);
+    void renderInfoTexts(float ambientTemp, float coolantTemp, float batteryVoltage, bool clutchPressed);
     SDL_Texture* loadTexture(const std::string& filePath);
     SDL_Window* window;
     SDL_Renderer* renderer;
@@ -34,6 +33,7 @@ private:
     SDL_Texture* engineLoadTexture;
     SDL_Texture* batteryTexture;
     SDL_Texture* throttleTexture;
+    SDL_Texture* clutchTexture;
     double screenAngle;
     int width, height;
     int centerX, centerY;

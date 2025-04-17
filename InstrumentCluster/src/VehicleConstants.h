@@ -21,10 +21,11 @@ const std::array<float, 7> GEAR_RATIOS = {
 
 struct VehicleData {
     int currentGear = 0;
-    int currentRpm = 0;
-    float currentCoolantTemp = 0.0f;
-    float currentThrottle = 0.0f;
-    float currentLoad = 0.0f;
-    float currentAmbient = 0.0f;
-    float currentVoltage = 0.0f;
+    int engineRpm = 0;
+    float coolantTemp = 0.0f;
+    float throttle = 0.0f;
+    float engineLoad = 0.0f;
+    float ambientTemp = 0.0f;
+    float voltage = 0.0f;
+    bool clutchPressed = false;
 };
