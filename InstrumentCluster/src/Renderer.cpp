@@ -17,8 +17,8 @@ Renderer::Renderer(int width, int height) : window(nullptr), renderer(nullptr), 
 #endif
     centerX = width / 2;
     centerY = height / 2;
-    radius = std::min(width, height) / 2;
-    innerRadius = radius - 70;
+    radius = std::min(width, height) / 1.96;
+    innerRadius = radius - 80;
     centerY += 10;
 }
 
@@ -61,8 +61,8 @@ void Renderer::start(){
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     gearFont = TTF_OpenFont("../assets/trans.ttf", 270);
     speedFont = TTF_OpenFont("../assets/bebas.ttf", 100);
-    numberFont = TTF_OpenFont("../assets/trans.ttf", 60);
-    infoFont = TTF_OpenFont("../assets/bebas.ttf", 40);
+    numberFont = TTF_OpenFont("../assets/trans.ttf", 58);
+    infoFont = TTF_OpenFont("../assets/bebas.ttf", 50);
     bgTexture = loadTexture("../assets/bg.png");
     tempTexture = loadTexture("../assets/temp.png");
     coolantTexture = loadTexture("../assets/coolant.png");
@@ -185,7 +185,7 @@ void Renderer::renderSpeed(float speed) {
 
 void Renderer::renderRPM(int rpm) {
     float rpmRatio = static_cast<float>(rpm) / RPM_MAX;
-    SDL_Color rpmColor = {216, 67, 21, 150};
+    SDL_Color rpmColor = {216, 67, 21, 120};
     SDL_Color rpmBackColor = {50, 50, 50, 100};
 
     drawRPMArc(START_ANGLE, END_ANGLE, rpmBackColor, true);
@@ -195,25 +195,29 @@ void Renderer::renderRPM(int rpm) {
 }
 
 void Renderer::drawRPMArc(float startAngle, float endAngle, SDL_Color color, bool ticks) {
-    int numPoints = 1000;
+    int numPoints = 500;
     Sint16 outerVx[numPoints];
     Sint16 outerVy[numPoints];
     Sint16 innerVx[numPoints];
     Sint16 innerVy[numPoints];
     float angleRange = startAngle - endAngle;
 
-    for (int i = 0; i < numPoints; ++i) {
-        float angle = startAngle - ((float)i / (float)(numPoints - 1)) * angleRange;
-        float angleRad = angle * M_PI / 180.0f;
-        outerVx[i] = centerX - radius * cosf(angleRad);
-        outerVy[i] = centerY + radius * sinf(angleRad);
-    }
+    int customRadius = !ticks ? radius - 1 : radius;
 
     for (int i = 0; i < numPoints; ++i) {
         float angle = startAngle - ((float)i / (float)(numPoints - 1)) * angleRange;
         float angleRad = angle * M_PI / 180.0f;
-        innerVx[i] = centerX - innerRadius * cosf(angleRad);
-        innerVy[i] = centerY + innerRadius * sinf(angleRad);
+        outerVx[i] = centerX - customRadius * cosf(angleRad);
+        outerVy[i] = centerY + customRadius * sinf(angleRad);
+    }
+
+    int customInnerRadius = !ticks ? innerRadius + 1 : innerRadius;
+
+    for (int i = 0; i < numPoints; ++i) {
+        float angle = startAngle - ((float)i / (float)(numPoints - 1)) * angleRange;
+        float angleRad = angle * M_PI / 180.0f;
+        innerVx[i] = centerX - customInnerRadius * cosf(angleRad);
+        innerVy[i] = centerY + customInnerRadius * sinf(angleRad);
     }
 
     Sint16 allVx[2 * numPoints];
@@ -232,22 +236,26 @@ void Renderer::drawRPMArc(float startAngle, float endAngle, SDL_Color color, boo
         return;
     }
 
+    polygonRGBA(renderer, allVx, allVy, 2 * numPoints, 255, 255, 255, 200);
+
     int numTicks = 24;
+    int tickLength = 18;
+    int tickRadius = radius - 1;
     for (int i = 0; i <= numTicks; ++i) {
         float tickAngle = startAngle - ((float)i / (float)numTicks) * angleRange;
         float tickAngleRad = tickAngle * M_PI / 180.0f;
-        int tickOuterX = centerX - radius * cosf(tickAngleRad);
-        int tickOuterY = centerY + radius * sinf(tickAngleRad);
-        int tickInnerX = centerX - (radius - 10) * cosf(tickAngleRad);
-        int tickInnerY = centerY + (radius - 10) * sinf(tickAngleRad);
-        thickLineRGBA(renderer, tickOuterX, tickOuterY, tickInnerX, tickInnerY, 4, 160, 160, 160, 200);
+        int tickOuterX = centerX - tickRadius * cosf(tickAngleRad);
+        int tickOuterY = centerY + tickRadius * sinf(tickAngleRad);
+        int tickInnerX = centerX - (tickRadius - tickLength) * cosf(tickAngleRad);
+        int tickInnerY = centerY + (tickRadius - tickLength) * sinf(tickAngleRad);
+        thickLineRGBA(renderer, tickOuterX, tickOuterY, tickInnerX, tickInnerY, 4, 170, 170, 170, 220);
     }
 }
 
 void Renderer::drawRPMNumbers() {
     const int numNumbers = 12;
     const float angleStep = (END_ANGLE - START_ANGLE) / numNumbers;
-    const int numberRadius = innerRadius + (radius - innerRadius) / 2.0;
+    const int numberRadius = innerRadius + (radius - innerRadius) / 2.7;
 
     for (int i = 0; i <= numNumbers; ++i) {
         float angle = END_ANGLE - i * angleStep;
@@ -265,7 +273,7 @@ void Renderer::drawRPMNumbers() {
 
         SDL_Surface* numberSurface = TTF_RenderText_Blended(numberFont, numberText.c_str(), numberColor);
         SDL_Texture* numberTexture = SDL_CreateTextureFromSurface(renderer, numberSurface);
-        SDL_Rect numberRect = {x - numberSurface->w / 2, y - numberSurface->h / 2 + 8, numberSurface->w, numberSurface->h};
+        SDL_Rect numberRect = {x - numberSurface->w / 2 + 2, y - numberSurface->h / 2 + 8, numberSurface->w, numberSurface->h};
         SDL_Color outlineColor = {0, 0, 0, 255};
         SDL_SetTextureColorMod(numberTexture, outlineColor.r, outlineColor.g, outlineColor.b);
 
@@ -343,7 +351,7 @@ void Renderer::renderInfoTexts(float ambientTemp, float coolantTemp, float batte
     SDL_Color coolantTempColor =
             (coolantTemp > 60.0f) ? SDL_Color{255, 20, 20, 255} :
             (coolantTemp > 40.0f) ? SDL_Color{255, 255, 20, 255} :
-            SDL_Color{255, 255, 255, 255};
+            SDL_Color{20, 255, 20, 255};
     SDL_SetTextureColorMod(coolantTexture, coolantTempColor.r, coolantTempColor.g, coolantTempColor.b);
     renderInfoTextWithIcon(coolantTexture, x, y, coolantTemp, "C", coolantTempColor);
 
