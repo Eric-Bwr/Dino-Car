@@ -34,6 +34,8 @@ private:
     SDL_Texture* batteryTexture;
     SDL_Texture* throttleTexture;
     SDL_Texture* clutchTexture;
+    SDL_Texture* absTexture;
+    SDL_Texture* tcTexture;
     double screenAngle;
     int width, height;
     int centerX, centerY;

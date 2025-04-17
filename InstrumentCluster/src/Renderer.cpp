@@ -70,6 +70,8 @@ void Renderer::start(){
     batteryTexture = loadTexture("../assets/battery.png");
     throttleTexture = loadTexture("../assets/throttle.png");
     clutchTexture = loadTexture("../assets/clutch.png");
+    absTexture = loadTexture("../assets/abs.png");
+    tcTexture = loadTexture("../assets/tc.png");
 }
 
 void Renderer::render(const VehicleData& data, float speed){
@@ -127,6 +129,9 @@ void Renderer::renderLoadThrottleBars(float load, float throttle) {
     const int textureHeight = 60;
     const int textureY = barY + barHeight + 10;
     SDL_Rect loadTextureRect = {loadBarX - (textureWidth - barWidth) / 2, textureY, textureWidth, textureHeight};
+
+    SDL_Color engineLoadColor = load > 80.0f ? SDL_Color{255, 255, 20, 255} : SDL_Color{255, 255, 255, 255};
+    SDL_SetTextureColorMod(engineLoadTexture, engineLoadColor.r, engineLoadColor.g, engineLoadColor.b);
     SDL_RenderCopy(renderer, engineLoadTexture, NULL, &loadTextureRect);
     SDL_Rect throttleTextureRect = {throttleBarX - (textureWidth - barWidth) / 2, textureY, textureWidth, textureHeight};
     SDL_RenderCopy(renderer, throttleTexture, NULL, &throttleTextureRect);
@@ -242,6 +247,9 @@ void Renderer::drawRPMArc(float startAngle, float endAngle, SDL_Color color, boo
     int tickLength = 18;
     int tickRadius = radius - 1;
     for (int i = 0; i <= numTicks; ++i) {
+        if (i == 0 || i == numTicks){
+            continue;
+        }
         float tickAngle = startAngle - ((float)i / (float)numTicks) * angleRange;
         float tickAngleRad = tickAngle * M_PI / 180.0f;
         int tickOuterX = centerX - tickRadius * cosf(tickAngleRad);
@@ -358,4 +366,13 @@ void Renderer::renderInfoTexts(float ambientTemp, float coolantTemp, float batte
     SDL_Color clutchColor = clutchPressed ? SDL_Color{20, 255, 20, 255} : SDL_Color{255, 255, 255, 255};
     SDL_SetTextureColorMod(clutchTexture, clutchColor.r, clutchColor.g, clutchColor.b);
     renderIcon(clutchTexture, width - 80, y, 40);
+
+    if(smoothedRpm < 6000){
+        return;
+    }
+    SDL_Color warningColor = {255, 255, 20, 255};
+    SDL_SetTextureColorMod(absTexture, warningColor.r, warningColor.g, warningColor.b);
+    renderIcon(absTexture, width / 2 - 80, height - 66, 80);
+    SDL_SetTextureColorMod(tcTexture, warningColor.r, warningColor.g, warningColor.b);
+    renderIcon(tcTexture, width / 2 + 20, height - 46, 42);
 }
