@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <SDL2/SDL2_gfxPrimitives.h>
 #include <SDL2/SDL_image.h>
+#include <vector>
 
 const float START_ANGLE = 90.0f + 30.0f;
 const float END_ANGLE = 90.0f + 330.0f;
@@ -62,6 +63,7 @@ void Renderer::start(){
     gearFont = TTF_OpenFont("../assets/trans.ttf", 270);
     speedFont = TTF_OpenFont("../assets/bebas.ttf", 100);
     numberFont = TTF_OpenFont("../assets/trans.ttf", 58);
+    trackFont = TTF_OpenFont("../assets/trans.ttf", 26);
     infoFont = TTF_OpenFont("../assets/bebas.ttf", 50);
     bgTexture = loadTexture("../assets/bg.png");
     tempTexture = loadTexture("../assets/temp.png");
@@ -84,21 +86,17 @@ void Renderer::render(const VehicleData& data, float speed){
     SDL_RenderCopy(renderer, bgTexture, NULL, &bgRect);
     renderGear(data.currentGear);
     renderSpeed(speed);
-    renderRPM(static_cast<int>(smoothedRpm));
+    renderRPM();
     renderInfoTexts(data.ambientTemp, data.coolantTemp, data.voltage, data.clutchPressed);
-    renderLoadThrottleBars(smoothedLoad, smoothedThrottle);
+    renderLoadThrottleBars();
+    renderTrackText();
+
     SDL_RenderPresent(renderer);
 }
 
-void Renderer::renderLoadThrottleBars(float load, float throttle) {
-    const int barWidth = 80;
-    const int barHeight = 280;
-    const int barY = centerY - barHeight / 2 + 20;
-    const int roundness = 15;
-    const int loadBarX = centerX - radius - barWidth - 30;
+void Renderer::renderLoadThrottleBars() {
     SDL_Color loadColor;
-    float loadRatio = load / 100.0f;
-    int barOffset = 2;
+    float loadRatio = smoothedLoad / 100.0f;
     loadRatio = std::max(0.0f, std::min(1.0f, loadRatio));
     SDL_Color green = {0, 255, 0, 255};
     SDL_Color yellow = {255, 255, 0, 255};
@@ -106,34 +104,75 @@ void Renderer::renderLoadThrottleBars(float load, float throttle) {
 
     if (loadRatio < 0.7f) {
         float ratio = loadRatio / 0.7f;
-        loadColor.r = (Uint8)(green.r * (1 - ratio) + yellow.r * ratio);
-        loadColor.g = (Uint8)(green.g * (1 - ratio) + yellow.g * ratio);
-        loadColor.b = (Uint8)(green.b * (1 - ratio) + yellow.b * ratio);
+        loadColor.r = (Uint8) (green.r * (1 - ratio) + yellow.r * ratio);
+        loadColor.g = (Uint8) (green.g * (1 - ratio) + yellow.g * ratio);
+        loadColor.b = (Uint8) (green.b * (1 - ratio) + yellow.b * ratio);
     } else {
         float ratio = (loadRatio - 0.7f) / 0.3f;
-        loadColor.r = (Uint8)(yellow.r * (1 - ratio) + red.r * ratio);
-        loadColor.g = (Uint8)(yellow.g * (1 - ratio) + red.g * ratio);
-        loadColor.b = (Uint8)(yellow.b * (1 - ratio) + red.b * ratio);
+        loadColor.r = (Uint8) (yellow.r * (1 - ratio) + red.r * ratio);
+        loadColor.g = (Uint8) (yellow.g * (1 - ratio) + red.g * ratio);
+        loadColor.b = (Uint8) (yellow.b * (1 - ratio) + red.b * ratio);
     }
+    loadColor.a = 220;
 
-    roundedBoxRGBA(renderer, loadBarX - barOffset, barY - barOffset, loadBarX + barWidth + barOffset, barY + barHeight + barOffset, roundness, 20, 20, 20, 200);
-    int fillHeight = static_cast<int>(barHeight * loadRatio);
-    roundedBoxRGBA(renderer, loadBarX, barY + barHeight - fillHeight, loadBarX + barWidth, barY + barHeight, roundness, loadColor.r, loadColor.g, loadColor.b, 200);
+    int numPoints = 500;
+    auto renderTicks = [&](float startAngle, float endAngle, int tickRadius) {
+        int numTicks = 6;
+        int tickLength = 20;
+        int tickThickness = 3;
+        float angleRange = startAngle - endAngle;
+        for (int i = 0; i <= numTicks; ++i) {
+            if (i == 0 || i == numTicks){
+                continue;
+            }
+            int customTickLength = tickLength;
+            int customTickThickness = tickThickness;
+            if (i % 2 == 0) {
+                customTickLength = 10;
+                customTickThickness = 3;
+            }
+            float tickAngle = startAngle - ((float)i / (float)numTicks) * angleRange;
+            float tickAngleRad = tickAngle * M_PI / 180.0f;
+            int tickOuterX = centerX - tickRadius * cosf(tickAngleRad);
+            int tickOuterY = centerY + tickRadius * sinf(tickAngleRad);
+            int tickInnerX = centerX - (tickRadius - customTickLength) * cosf(tickAngleRad);
+            int tickInnerY = centerY + (tickRadius - customTickLength) * sinf(tickAngleRad);
+            thickLineRGBA(renderer, tickOuterX, tickOuterY, tickInnerX, tickInnerY, customTickThickness, 170, 170, 170, 255);
+        }
+    };
+    SDL_Color barBackColor = {50, 50, 50, 100};
+    auto renderBar = [&](float startAngle, float endAngle, SDL_Color color, bool ticks) {
+        int customRadius = radius + 120;
+        int customInnerRadius = radius + 55;
+        std::vector<Sint16> vX(numPoints);
+        std::vector<Sint16> vY(numPoints);
+        if(ticks) {
+            generateArcPoints(startAngle, endAngle, customRadius, customInnerRadius, vX, vY, true);
+            polygonRGBA(renderer, vX.data(), vY.data(), numPoints, color.r, color.g, color.b, color.a);
+            filledPolygonRGBA(renderer, vX.data(), vY.data(), numPoints, barBackColor.r, barBackColor.g, barBackColor.b, barBackColor.a);
+            renderTicks(startAngle, endAngle, customRadius);
+        }else{
+            generateArcPoints(startAngle, endAngle, customRadius, customInnerRadius, vX, vY);
+            filledPolygonRGBA(renderer, vX.data(), vY.data(), numPoints, color.r, color.g, color.b, color.a);
+        }
+    };
 
-    const int throttleBarX = centerX + radius + 30;
-    roundedBoxRGBA(renderer, throttleBarX - barOffset, barY - barOffset, throttleBarX + barWidth + barOffset, barY + barHeight + barOffset, roundness, 20, 20, 20, 200);
-    int throttleFillHeight = static_cast<int>(barHeight * throttle / 80.0f);
-    roundedBoxRGBA(renderer, throttleBarX, barY + barHeight - throttleFillHeight, throttleBarX + barWidth, barY + barHeight, roundness, 0, 0, 255, 200);
+    float throttleAngleStart = 155.0f;
+    float throttleAngleEnd = 200.0f;
+    float loadAngleStart = -20.0f;
+    float loadAngleEnd = 25.0f;
 
-    const int textureWidth = 60;
-    const int textureHeight = 60;
-    const int textureY = barY + barHeight + 10;
-    SDL_Rect loadTextureRect = {loadBarX - (textureWidth - barWidth) / 2, textureY, textureWidth, textureHeight};
+    renderBar(loadAngleEnd, loadAngleStart + (loadAngleEnd - loadAngleStart) * (1.0 - smoothedLoad / 100.0f), loadColor, false);
+    renderBar(throttleAngleStart, throttleAngleStart + (throttleAngleEnd - throttleAngleStart) * smoothedThrottle / THROTTLE_MAX, {20, 20, 255, 220}, false);
 
-    SDL_Color engineLoadColor = load > 80.0f ? SDL_Color{255, 255, 20, 255} : SDL_Color{255, 255, 255, 255};
+    renderBar(loadAngleStart, loadAngleEnd, {255, 255, 255, 200}, true);
+    renderBar(throttleAngleStart, throttleAngleEnd, {255, 255, 255, 200}, true);
+
+    SDL_Rect loadTextureRect = {80, height - 65, 60, 60};
+    SDL_Color engineLoadColor = smoothedLoad > 80.0f ? SDL_Color{255, 255, 20, 255} : SDL_Color{255, 255, 255, 255};
     SDL_SetTextureColorMod(engineLoadTexture, engineLoadColor.r, engineLoadColor.g, engineLoadColor.b);
     SDL_RenderCopy(renderer, engineLoadTexture, NULL, &loadTextureRect);
-    SDL_Rect throttleTextureRect = {throttleBarX - (textureWidth - barWidth) / 2, textureY, textureWidth, textureHeight};
+    SDL_Rect throttleTextureRect = {width - 80 - 50, height - 60, 60, 60};
     SDL_RenderCopy(renderer, throttleTexture, NULL, &throttleTextureRect);
 }
 
@@ -188,8 +227,8 @@ void Renderer::renderSpeed(float speed) {
     SDL_DestroyTexture(speedTexture);
 }
 
-void Renderer::renderRPM(int rpm) {
-    float rpmRatio = static_cast<float>(rpm) / RPM_MAX;
+void Renderer::renderRPM() {
+    float rpmRatio = static_cast<float>(smoothedRpm) / RPM_MAX;
     SDL_Color rpmColor = {216, 67, 21, 120};
     SDL_Color rpmBackColor = {50, 50, 50, 100};
 
@@ -200,63 +239,42 @@ void Renderer::renderRPM(int rpm) {
 }
 
 void Renderer::drawRPMArc(float startAngle, float endAngle, SDL_Color color, bool ticks) {
-    int numPoints = 500;
-    Sint16 outerVx[numPoints];
-    Sint16 outerVy[numPoints];
-    Sint16 innerVx[numPoints];
-    Sint16 innerVy[numPoints];
+    int numPoints = 1000;
     float angleRange = startAngle - endAngle;
 
-    int customRadius = !ticks ? radius - 1 : radius;
+    std::vector<Sint16> vX(numPoints);
+    std::vector<Sint16> vY(numPoints);
+    generateArcPoints(startAngle, endAngle, radius, innerRadius, vX, vY, ticks);
 
-    for (int i = 0; i < numPoints; ++i) {
-        float angle = startAngle - ((float)i / (float)(numPoints - 1)) * angleRange;
-        float angleRad = angle * M_PI / 180.0f;
-        outerVx[i] = centerX - customRadius * cosf(angleRad);
-        outerVy[i] = centerY + customRadius * sinf(angleRad);
-    }
-
-    int customInnerRadius = !ticks ? innerRadius + 1 : innerRadius;
-
-    for (int i = 0; i < numPoints; ++i) {
-        float angle = startAngle - ((float)i / (float)(numPoints - 1)) * angleRange;
-        float angleRad = angle * M_PI / 180.0f;
-        innerVx[i] = centerX - customInnerRadius * cosf(angleRad);
-        innerVy[i] = centerY + customInnerRadius * sinf(angleRad);
-    }
-
-    Sint16 allVx[2 * numPoints];
-    Sint16 allVy[2 * numPoints];
-
-    for (int i = 0; i < numPoints; ++i) {
-        allVx[i] = outerVx[i];
-        allVy[i] = outerVy[i];
-        allVx[numPoints + i] = innerVx[numPoints - 1 - i];
-        allVy[numPoints + i] = innerVy[numPoints - 1 - i];
-    }
-
-    filledPolygonRGBA(renderer, allVx, allVy, 2 * numPoints, color.r, color.g, color.b, color.a);
+    filledPolygonRGBA(renderer, vX.data(), vY.data(), numPoints, color.r, color.g, color.b, color.a);
 
     if (!ticks){
         return;
     }
 
-    polygonRGBA(renderer, allVx, allVy, 2 * numPoints, 255, 255, 255, 200);
+    polygonRGBA(renderer, vX.data(), vY.data(), numPoints, 255, 255, 255, 200);
 
     int numTicks = 24;
     int tickLength = 18;
     int tickRadius = radius - 1;
+    int tickThickness = 4;
     for (int i = 0; i <= numTicks; ++i) {
         if (i == 0 || i == numTicks){
             continue;
+        }
+        int customTickLength = tickLength;
+        int customTickThickness = tickThickness;
+        if (i % 2 == 1) {
+            customTickLength = 12;
+            customTickThickness = 3;
         }
         float tickAngle = startAngle - ((float)i / (float)numTicks) * angleRange;
         float tickAngleRad = tickAngle * M_PI / 180.0f;
         int tickOuterX = centerX - tickRadius * cosf(tickAngleRad);
         int tickOuterY = centerY + tickRadius * sinf(tickAngleRad);
-        int tickInnerX = centerX - (tickRadius - tickLength) * cosf(tickAngleRad);
-        int tickInnerY = centerY + (tickRadius - tickLength) * sinf(tickAngleRad);
-        thickLineRGBA(renderer, tickOuterX, tickOuterY, tickInnerX, tickInnerY, 4, 170, 170, 170, 220);
+        int tickInnerX = centerX - (tickRadius - customTickLength) * cosf(tickAngleRad);
+        int tickInnerY = centerY + (tickRadius - customTickLength) * sinf(tickAngleRad);
+        thickLineRGBA(renderer, tickOuterX, tickOuterY, tickInnerX, tickInnerY, customTickThickness, 170, 170, 170, 220);
     }
 }
 
@@ -365,7 +383,7 @@ void Renderer::renderInfoTexts(float ambientTemp, float coolantTemp, float batte
 
     SDL_Color clutchColor = clutchPressed ? SDL_Color{20, 255, 20, 255} : SDL_Color{255, 255, 255, 255};
     SDL_SetTextureColorMod(clutchTexture, clutchColor.r, clutchColor.g, clutchColor.b);
-    renderIcon(clutchTexture, width - 80, y, 40);
+    renderIcon(clutchTexture, width - 164, y, 40);
 
     if(smoothedRpm < 6000){
         return;
@@ -375,4 +393,65 @@ void Renderer::renderInfoTexts(float ambientTemp, float coolantTemp, float batte
     renderIcon(absTexture, width / 2 - 80, height - 66, 80);
     SDL_SetTextureColorMod(tcTexture, warningColor.r, warningColor.g, warningColor.b);
     renderIcon(tcTexture, width / 2 + 20, height - 46, 42);
+}
+
+void Renderer::renderTrackText(){
+    SDL_Color outlineColor = {216, 67, 21, 255};
+    SDL_Color fillColor = {0, 0, 0, 255};
+    SDL_Surface* gearSurface = TTF_RenderText_Blended(trackFont, "TRACK", {255,255,255,255});
+    SDL_Texture* gearTexture = SDL_CreateTextureFromSurface(renderer, gearSurface);
+    SDL_Rect gearRect = {
+            (width - gearSurface->w) / 2 + 90,
+            centerY - gearSurface->h / 2 + 84,
+            gearSurface->w,
+            gearSurface->h
+    };
+
+    SDL_SetTextureColorMod(gearTexture, outlineColor.r, outlineColor.g, outlineColor.b);
+    for (int dx = -1; dx <= 2; ++dx) {
+        for (int dy = -1; dy <= 2; ++dy) {
+            if (dx == 0 && dy == 0) continue;
+            SDL_Rect outlineRect = gearRect;
+            outlineRect.x += dx;
+            outlineRect.y += dy;
+            SDL_RenderCopy(renderer, gearTexture, nullptr, &outlineRect);
+        }
+    }
+
+    SDL_SetTextureColorMod(gearTexture, fillColor.r, fillColor.g, fillColor.b);
+    SDL_RenderCopy(renderer, gearTexture, nullptr, &gearRect);
+    SDL_FreeSurface(gearSurface);
+    SDL_DestroyTexture(gearTexture);
+}
+
+void Renderer::generateArcPoints(float startAngle, float endAngle, int outerRad, int innerRad, std::vector<Sint16>& vX, std::vector<Sint16>& vY, bool outline) const{
+    auto arcOffsetAngle = [&](float radius, float offset) {
+        if (offset >= radius) return 90.0f;
+        return asinf(offset / radius) * 180.0f / (float)M_PI;
+    };
+    float offsetAmount = outline ? 1.0f : 0.0f;
+    float angleOffsetInner = arcOffsetAngle(innerRad, offsetAmount);
+    float angleOffsetOuter = arcOffsetAngle(outerRad, offsetAmount);
+    float angleOffset = std::min(angleOffsetInner, angleOffsetOuter);
+
+    float newStartAngle = startAngle - angleOffset;
+    float newEndAngle   = endAngle   + angleOffset;
+
+    float angleRange = newStartAngle - newEndAngle;
+    int numPoints = (int)vX.size() / 2;
+
+    for (int i = 0; i < numPoints; ++i) {
+        float angle = newStartAngle - ((float)i / (float)(numPoints - 1)) * angleRange;
+        float angleRad = angle * (float)M_PI / 180.0f;
+        float r = (float)innerRad - offsetAmount;
+        vX[i] = short((float)centerX - r * cosf(angleRad));
+        vY[i] = short((float)centerY + r * sinf(angleRad));
+    }
+    for (int i = 0; i < numPoints; ++i) {
+        float angle = newStartAngle - ((float)i / (float)(numPoints - 1)) * angleRange;
+        float angleRad = angle * (float)M_PI / 180.0f;
+        float r = (float)outerRad + offsetAmount;
+        vX[(numPoints * 2) - 1 - i] = short((float)centerX - r * cosf(angleRad));
+        vY[(numPoints * 2) - 1 - i] = short((float)centerY + r * sinf(angleRad));
+    }
 }

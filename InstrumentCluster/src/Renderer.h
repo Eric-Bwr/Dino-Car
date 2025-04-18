@@ -3,6 +3,7 @@
 #include <string>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <vector>
 #include "VehicleConstants.h"
 
 class Renderer {
@@ -14,18 +15,21 @@ public:
 private:
     void renderGear(int gear);
     void renderSpeed(float speed);
-    void renderRPM(int rpm);
+    void renderRPM();
     void drawNeedle(float rpmRatio);
     void drawRPMArc(float startAngle, float endAngle, SDL_Color color, bool ticks);
     void drawRPMNumbers();
-    void renderLoadThrottleBars(float load, float throttle);
+    void renderLoadThrottleBars();
     void renderInfoTexts(float ambientTemp, float coolantTemp, float batteryVoltage, bool clutchPressed);
+    void renderTrackText();
+    void generateArcPoints(float startAngle, float endAngle, int outerRad, int innerRad, std::vector<Sint16>& vX, std::vector<Sint16>& vY, bool outline = false) const;
     SDL_Texture* loadTexture(const std::string& filePath);
     SDL_Window* window;
     SDL_Renderer* renderer;
     TTF_Font* gearFont;
     TTF_Font* speedFont;
     TTF_Font* numberFont;
+    TTF_Font* trackFont;
     TTF_Font* infoFont;
     SDL_Texture* bgTexture;
     SDL_Texture* tempTexture;

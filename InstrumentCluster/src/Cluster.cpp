@@ -34,7 +34,7 @@ int main() {
         }
         data.ambientTemp = 20.5;
         data.voltage = ((float)data.engineRpm / RPM_MAX) * 15.0f;
-        data.coolantTemp = ((float)data.engineRpm / RPM_MAX) * 80.0f;
+        data.coolantTemp = ((float)data.engineRpm / RPM_MAX) * THROTTLE_MAX;
         data.engineLoad = ((float)data.engineRpm / RPM_MAX) * 100.0f;
         data.throttle = ((float)data.engineRpm / RPM_MAX) * 80.0f;
 #else

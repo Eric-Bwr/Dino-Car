@@ -3,6 +3,7 @@
 #include <array>
 
 const int RPM_MAX = 12000;
+const float THROTTLE_MAX = 80.0f;
 
 const float WHEEL_DIAMETER_MM = 360.4f;
 const float FINAL_DRIVE_RATIO = 12.42f;
