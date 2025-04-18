@@ -13,7 +13,7 @@ public:
     void start();
     void render(const VehicleData& data, float speed);
 private:
-    void renderGear(int gear);
+    void renderGear(int gear, bool goal = false);
     void renderSpeed(float speed);
     void renderRPM();
     void drawNeedle(float rpmRatio);
@@ -27,6 +27,7 @@ private:
     SDL_Window* window;
     SDL_Renderer* renderer;
     TTF_Font* gearFont;
+    TTF_Font* gearGoalFont;
     TTF_Font* speedFont;
     TTF_Font* numberFont;
     TTF_Font* trackFont;

@@ -20,8 +20,11 @@ int main() {
     Renderer renderer(800, 480);
     renderer.start();
 
+    SDL_Event event;
+    bool running = true;
+
     VehicleData data;
-    while (true) {
+    while (running) {
 #if not IS_RASPI
         data.engineRpm += 100;
         if (data.engineRpm > RPM_MAX) {
@@ -40,6 +43,27 @@ int main() {
 #else
         data = arduino.getData();
 #endif
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                running = false;
+            }
+            else if (event.type == SDL_KEYDOWN) {
+                switch (event.key.keysym.sym) {
+                    case SDLK_a:
+                        data.gearGoal--;
+                        if(data.gearGoal < -1){
+                            data.gearGoal = -1;
+                        }
+                        break;
+                    case SDLK_d:
+                        data.gearGoal++;
+                        if(data.gearGoal > 6){
+                            data.gearGoal = 6;
+                        }
+                        break;
+                }
+            }
+        }
         renderer.render(data, calculateSpeed(data.engineRpm, data.currentGear));
         SDL_Delay(16);
     }

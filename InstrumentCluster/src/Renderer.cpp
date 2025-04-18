@@ -61,6 +61,7 @@ void Renderer::start(){
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     gearFont = TTF_OpenFont("../assets/trans.ttf", 270);
+    gearGoalFont = TTF_OpenFont("../assets/trans.ttf", 80);
     speedFont = TTF_OpenFont("../assets/bebas.ttf", 100);
     numberFont = TTF_OpenFont("../assets/trans.ttf", 58);
     trackFont = TTF_OpenFont("../assets/trans.ttf", 26);
@@ -85,6 +86,7 @@ void Renderer::render(const VehicleData& data, float speed){
     SDL_Rect bgRect = {0, 0, width, height};
     SDL_RenderCopy(renderer, bgTexture, NULL, &bgRect);
     renderGear(data.currentGear);
+    renderGear(data.gearGoal, true);
     renderSpeed(speed);
     renderRPM();
     renderInfoTexts(data.ambientTemp, data.coolantTemp, data.voltage, data.clutchPressed);
@@ -176,14 +178,17 @@ void Renderer::renderLoadThrottleBars() {
     SDL_RenderCopy(renderer, throttleTexture, NULL, &throttleTextureRect);
 }
 
-void Renderer::renderGear(int gear) {
+void Renderer::renderGear(int gear, bool goal) {
+    if(goal && gear == -1){
+        return;
+    }
     std::string gearText = gear == 0 ? "N" : std::to_string(gear);
     SDL_Color outlineColor = {216, 67, 21, 255};
     SDL_Color fillColor = {0, 0, 0, 255};
-    SDL_Surface* gearSurface = TTF_RenderText_Blended(gearFont, gearText.c_str(), {255,255,255,255});
+    SDL_Surface* gearSurface = TTF_RenderText_Blended(goal ? gearGoalFont : gearFont, gearText.c_str(), {255,255,255,255});
     SDL_Texture* gearTexture = SDL_CreateTextureFromSurface(renderer, gearSurface);
     SDL_Rect gearRect = {
-        (width - gearSurface->w) / 2,
+        goal ? 250 : (width - gearSurface->w) / 2,
         centerY - gearSurface->h / 2,
         gearSurface->w,
         gearSurface->h
