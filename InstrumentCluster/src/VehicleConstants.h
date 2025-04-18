@@ -3,6 +3,7 @@
 #include <array>
 
 const int RPM_MAX = 12000;
+const float THROTTLE_MAX = 80.0f;
 
 const float WHEEL_DIAMETER_MM = 360.4f;
 const float FINAL_DRIVE_RATIO = 12.42f;
@@ -20,6 +21,7 @@ const std::array<float, 7> GEAR_RATIOS = {
 };
 
 struct VehicleData {
+    int gearGoal = -1;
     int currentGear = 0;
     int engineRpm = 0;
     float coolantTemp = 0.0f;
