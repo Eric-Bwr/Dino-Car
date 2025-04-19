@@ -7,9 +7,6 @@
 #include <SDL2/SDL_image.h>
 #include <vector>
 
-const float START_ANGLE = 90.0f + 30.0f;
-const float END_ANGLE = 90.0f + 330.0f;
-
 Renderer::Renderer(int width, int height) : window(nullptr), renderer(nullptr), width(width), height(height){
 #if IS_RASPI
     screenAngle = 180.0;
@@ -83,17 +80,33 @@ void Renderer::render(const VehicleData& data, float speed){
     smoothedThrottle = smoothingFactor * data.throttle + (1 - smoothingFactor) * smoothedThrottle;
 
     SDL_RenderClear(renderer);
-    SDL_Rect bgRect = {0, 0, width, height};
-    SDL_RenderCopy(renderer, bgTexture, NULL, &bgRect);
+    renderBackground();
+
     renderGear(data.currentGear);
     renderGear(data.gearGoal, true);
     renderSpeed(speed);
     renderRPM();
-    renderInfoTexts(data.ambientTemp, data.coolantTemp, data.voltage, data.clutchPressed);
     renderLoadThrottleBars();
-    renderTrackText();
+    renderInfoTexts(data.ambientTemp, data.coolantTemp, data.voltage, data.clutchPressed);
 
     SDL_RenderPresent(renderer);
+}
+
+void Renderer::renderLoadThrottleBar(float startAngle, float endAngle, SDL_Color color, bool outline) {
+    SDL_Color barBackColor = {50, 50, 50, 100};
+    int numPoints = 100;
+    int customRadius = radius + 120;
+    int customInnerRadius = radius + 55;
+    std::vector<Sint16> vX(numPoints);
+    std::vector<Sint16> vY(numPoints);
+    if(outline) {
+        generateArcPoints(startAngle, endAngle, customRadius, customInnerRadius, vX, vY, true);
+        polygonRGBA(renderer, vX.data(), vY.data(), numPoints, color.r, color.g, color.b, color.a);
+        filledPolygonRGBA(renderer, vX.data(), vY.data(), numPoints, barBackColor.r, barBackColor.g, barBackColor.b, barBackColor.a);
+    }else{
+        generateArcPoints(startAngle, endAngle, customRadius, customInnerRadius, vX, vY);
+        filledPolygonRGBA(renderer, vX.data(), vY.data(), numPoints, color.r, color.g, color.b, color.a);
+    }
 }
 
 void Renderer::renderLoadThrottleBars() {
@@ -115,60 +128,10 @@ void Renderer::renderLoadThrottleBars() {
         loadColor.g = (Uint8) (yellow.g * (1 - ratio) + red.g * ratio);
         loadColor.b = (Uint8) (yellow.b * (1 - ratio) + red.b * ratio);
     }
-    loadColor.a = 220;
+    loadColor.a = 140;
 
-    int numPoints = 500;
-    auto renderTicks = [&](float startAngle, float endAngle, int tickRadius) {
-        int numTicks = 6;
-        int tickLength = 20;
-        int tickThickness = 3;
-        float angleRange = startAngle - endAngle;
-        for (int i = 0; i <= numTicks; ++i) {
-            if (i == 0 || i == numTicks){
-                continue;
-            }
-            int customTickLength = tickLength;
-            int customTickThickness = tickThickness;
-            if (i % 2 == 0) {
-                customTickLength = 10;
-                customTickThickness = 3;
-            }
-            float tickAngle = startAngle - ((float)i / (float)numTicks) * angleRange;
-            float tickAngleRad = tickAngle * M_PI / 180.0f;
-            int tickOuterX = centerX - tickRadius * cosf(tickAngleRad);
-            int tickOuterY = centerY + tickRadius * sinf(tickAngleRad);
-            int tickInnerX = centerX - (tickRadius - customTickLength) * cosf(tickAngleRad);
-            int tickInnerY = centerY + (tickRadius - customTickLength) * sinf(tickAngleRad);
-            thickLineRGBA(renderer, tickOuterX, tickOuterY, tickInnerX, tickInnerY, customTickThickness, 170, 170, 170, 255);
-        }
-    };
-    SDL_Color barBackColor = {50, 50, 50, 100};
-    auto renderBar = [&](float startAngle, float endAngle, SDL_Color color, bool ticks) {
-        int customRadius = radius + 120;
-        int customInnerRadius = radius + 55;
-        std::vector<Sint16> vX(numPoints);
-        std::vector<Sint16> vY(numPoints);
-        if(ticks) {
-            generateArcPoints(startAngle, endAngle, customRadius, customInnerRadius, vX, vY, true);
-            polygonRGBA(renderer, vX.data(), vY.data(), numPoints, color.r, color.g, color.b, color.a);
-            filledPolygonRGBA(renderer, vX.data(), vY.data(), numPoints, barBackColor.r, barBackColor.g, barBackColor.b, barBackColor.a);
-            renderTicks(startAngle, endAngle, customRadius);
-        }else{
-            generateArcPoints(startAngle, endAngle, customRadius, customInnerRadius, vX, vY);
-            filledPolygonRGBA(renderer, vX.data(), vY.data(), numPoints, color.r, color.g, color.b, color.a);
-        }
-    };
-
-    float throttleAngleStart = 155.0f;
-    float throttleAngleEnd = 200.0f;
-    float loadAngleStart = -20.0f;
-    float loadAngleEnd = 25.0f;
-
-    renderBar(loadAngleEnd, loadAngleStart + (loadAngleEnd - loadAngleStart) * (1.0 - smoothedLoad / 100.0f), loadColor, false);
-    renderBar(throttleAngleStart, throttleAngleStart + (throttleAngleEnd - throttleAngleStart) * smoothedThrottle / THROTTLE_MAX, {20, 20, 255, 220}, false);
-
-    renderBar(loadAngleStart, loadAngleEnd, {255, 255, 255, 200}, true);
-    renderBar(throttleAngleStart, throttleAngleEnd, {255, 255, 255, 200}, true);
+    renderLoadThrottleBar(LOAD_ANGLE_END, LOAD_ANGLE_START + (LOAD_ANGLE_END - LOAD_ANGLE_START) * (1.0 - smoothedLoad / 100.0f), loadColor, false);
+    renderLoadThrottleBar(THROTTLE_ANGLE_START, THROTTLE_ANGLE_START + (THROTTLE_ANGLE_END - THROTTLE_ANGLE_START) * smoothedThrottle / THROTTLE_MAX, {20, 20, 255, 140}, false);
 
     SDL_Rect loadTextureRect = {80, height - 65, 60, 60};
     SDL_Color engineLoadColor = smoothedLoad > 80.0f ? SDL_Color{255, 255, 20, 255} : SDL_Color{255, 255, 255, 255};
@@ -235,16 +198,14 @@ void Renderer::renderSpeed(float speed) {
 void Renderer::renderRPM() {
     float rpmRatio = static_cast<float>(smoothedRpm) / RPM_MAX;
     SDL_Color rpmColor = {216, 67, 21, 120};
-    SDL_Color rpmBackColor = {50, 50, 50, 100};
 
-    drawRPMArc(START_ANGLE, END_ANGLE, rpmBackColor, true);
-    drawRPMArc(END_ANGLE, START_ANGLE - (START_ANGLE - END_ANGLE) * (1.0 - rpmRatio), rpmColor, false);
+    drawRPMArc(RPM_ARC_END_ANGLE, RPM_ARC_START_ANGLE - (RPM_ARC_START_ANGLE - RPM_ARC_END_ANGLE) * (1.0 - rpmRatio), rpmColor, false);
     drawRPMNumbers();
     drawNeedle(rpmRatio);
 }
 
 void Renderer::drawRPMArc(float startAngle, float endAngle, SDL_Color color, bool ticks) {
-    int numPoints = 1000;
+    int numPoints = 120;
     float angleRange = startAngle - endAngle;
 
     std::vector<Sint16> vX(numPoints);
@@ -285,11 +246,11 @@ void Renderer::drawRPMArc(float startAngle, float endAngle, SDL_Color color, boo
 
 void Renderer::drawRPMNumbers() {
     const int numNumbers = 12;
-    const float angleStep = (END_ANGLE - START_ANGLE) / numNumbers;
+    const float angleStep = (RPM_ARC_END_ANGLE - RPM_ARC_START_ANGLE) / numNumbers;
     const int numberRadius = innerRadius + (radius - innerRadius) / 2.7;
 
     for (int i = 0; i <= numNumbers; ++i) {
-        float angle = END_ANGLE - i * angleStep;
+        float angle = RPM_ARC_END_ANGLE - i * angleStep;
         float angleRad = angle * M_PI / 180.0f;
         int x = centerX - numberRadius * cosf(angleRad);
         int y = centerY + numberRadius * sinf(angleRad);
@@ -325,7 +286,7 @@ void Renderer::drawRPMNumbers() {
 }
 
 void Renderer::drawNeedle(float rpmRatio) {
-    float angle = START_ANGLE - (START_ANGLE - END_ANGLE) * (1.0 - rpmRatio);
+    float angle = RPM_ARC_START_ANGLE - (RPM_ARC_START_ANGLE - RPM_ARC_END_ANGLE) * (1.0 - rpmRatio);
     float angleRad = angle * M_PI / 180.0f;
     int startX = centerX - innerRadius * cosf(angleRad);
     int startY = centerY + innerRadius * sinf(angleRad);
@@ -398,35 +359,6 @@ void Renderer::renderInfoTexts(float ambientTemp, float coolantTemp, float batte
     renderIcon(absTexture, width / 2 - 80, height - 66, 80);
     SDL_SetTextureColorMod(tcTexture, warningColor.r, warningColor.g, warningColor.b);
     renderIcon(tcTexture, width / 2 + 20, height - 46, 42);
-}
-
-void Renderer::renderTrackText(){
-    SDL_Color outlineColor = {216, 67, 21, 255};
-    SDL_Color fillColor = {0, 0, 0, 255};
-    SDL_Surface* gearSurface = TTF_RenderText_Blended(trackFont, "TRACK", {255,255,255,255});
-    SDL_Texture* gearTexture = SDL_CreateTextureFromSurface(renderer, gearSurface);
-    SDL_Rect gearRect = {
-            (width - gearSurface->w) / 2 + 90,
-            centerY - gearSurface->h / 2 + 84,
-            gearSurface->w,
-            gearSurface->h
-    };
-
-    SDL_SetTextureColorMod(gearTexture, outlineColor.r, outlineColor.g, outlineColor.b);
-    for (int dx = -1; dx <= 2; ++dx) {
-        for (int dy = -1; dy <= 2; ++dy) {
-            if (dx == 0 && dy == 0) continue;
-            SDL_Rect outlineRect = gearRect;
-            outlineRect.x += dx;
-            outlineRect.y += dy;
-            SDL_RenderCopy(renderer, gearTexture, nullptr, &outlineRect);
-        }
-    }
-
-    SDL_SetTextureColorMod(gearTexture, fillColor.r, fillColor.g, fillColor.b);
-    SDL_RenderCopy(renderer, gearTexture, nullptr, &gearRect);
-    SDL_FreeSurface(gearSurface);
-    SDL_DestroyTexture(gearTexture);
 }
 
 void Renderer::generateArcPoints(float startAngle, float endAngle, int outerRad, int innerRad, std::vector<Sint16>& vX, std::vector<Sint16>& vY, bool outline) const{

@@ -6,6 +6,13 @@
 #include <vector>
 #include "VehicleConstants.h"
 
+const float RPM_ARC_START_ANGLE = 90.0f + 30.0f;
+const float RPM_ARC_END_ANGLE = 90.0f + 330.0f;
+const float THROTTLE_ANGLE_START = 155.0f;
+const float THROTTLE_ANGLE_END = 200.0f;
+const float LOAD_ANGLE_START = -20.0f;
+const float LOAD_ANGLE_END = 25.0f;
+
 class Renderer {
 public:
     Renderer(int width, int height);
@@ -23,6 +30,9 @@ private:
     void renderInfoTexts(float ambientTemp, float coolantTemp, float batteryVoltage, bool clutchPressed);
     void renderTrackText();
     void generateArcPoints(float startAngle, float endAngle, int outerRad, int innerRad, std::vector<Sint16>& vX, std::vector<Sint16>& vY, bool outline = false) const;
+    void renderBackground();
+    void renderLoadThrottleBarBackground();
+    void renderLoadThrottleBar(float startAngle, float endAngle, SDL_Color color, bool outline);
     SDL_Texture* loadTexture(const std::string& filePath);
     SDL_Window* window;
     SDL_Renderer* renderer;
