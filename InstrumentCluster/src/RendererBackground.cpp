@@ -1,7 +1,15 @@
-#include <SDL2_gfxPrimitives.h>
 #include "Renderer.h"
+#include <SDL2_gfxPrimitives.h>
+#include <iostream>
 
-void Renderer::renderBackground(){
+void Renderer::preRenderBackground(){
+    renderedBackgroundTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
+    if (!renderedBackgroundTexture) {
+        std::cerr << "Failed to create background texture: " << SDL_GetError() << std::endl;
+        return;
+    }
+    SDL_SetRenderTarget(renderer, renderedBackgroundTexture);
+
     SDL_Rect bgRect = {0, 0, width, height};
     SDL_RenderCopy(renderer, bgTexture, NULL, &bgRect);
 
@@ -9,7 +17,10 @@ void Renderer::renderBackground(){
     drawRPMArc(RPM_ARC_START_ANGLE, RPM_ARC_END_ANGLE, rpmBackColor, true);
 
     renderLoadThrottleBarBackground();
+
     renderTrackText();
+
+    SDL_SetRenderTarget(renderer, NULL);
 }
 
 void Renderer::renderLoadThrottleBarBackground(){

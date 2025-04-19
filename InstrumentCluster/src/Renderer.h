@@ -30,7 +30,7 @@ private:
     void renderInfoTexts(float ambientTemp, float coolantTemp, float batteryVoltage, bool clutchPressed);
     void renderTrackText();
     void generateArcPoints(float startAngle, float endAngle, int outerRad, int innerRad, std::vector<Sint16>& vX, std::vector<Sint16>& vY, bool outline = false) const;
-    void renderBackground();
+    void preRenderBackground();
     void renderLoadThrottleBarBackground();
     void renderLoadThrottleBar(float startAngle, float endAngle, SDL_Color color, bool outline);
     SDL_Texture* loadTexture(const std::string& filePath);
@@ -51,6 +51,7 @@ private:
     SDL_Texture* clutchTexture;
     SDL_Texture* absTexture;
     SDL_Texture* tcTexture;
+    SDL_Texture* renderedBackgroundTexture;
     double screenAngle;
     int width, height;
     int centerX, centerY;

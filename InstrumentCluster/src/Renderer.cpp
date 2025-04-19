@@ -72,6 +72,7 @@ void Renderer::start(){
     clutchTexture = loadTexture("../assets/clutch.png");
     absTexture = loadTexture("../assets/abs.png");
     tcTexture = loadTexture("../assets/tc.png");
+    preRenderBackground();
 }
 
 void Renderer::render(const VehicleData& data, float speed){
@@ -80,7 +81,9 @@ void Renderer::render(const VehicleData& data, float speed){
     smoothedThrottle = smoothingFactor * data.throttle + (1 - smoothingFactor) * smoothedThrottle;
 
     SDL_RenderClear(renderer);
-    renderBackground();
+
+    SDL_Rect bgRect = {0, 0, width, height};
+    SDL_RenderCopy(renderer, renderedBackgroundTexture, NULL, &bgRect);
 
     renderGear(data.currentGear);
     renderGear(data.gearGoal, true);
