@@ -16,6 +16,7 @@ const int numPIDs = sizeof(pidList);
 const int batteryPin = A0;
 const float R1 = 47000.0; // 47k ohm
 const float R2 = 10000.0; // 10k ohm
+const float scalingFactor = 0.934; // Cheap resistors
 
 float throttle = -1;
 float ambiTemp = -1;
@@ -75,6 +76,7 @@ void loop() {
   int sensorValue = analogRead(batteryPin);
   float voltage = sensorValue * (5.0 / 1023.0);
   batteryVoltage = voltage * ((R1 + R2) / R2);
+  batteryVoltage *= scalingFactor;
   if (millis() - lastRequestTime >= 5) {
     lastRequestTime = millis();
     sendPIDRequest();
