@@ -52,7 +52,7 @@ private:
     SDL_Texture* absTexture;
     SDL_Texture* tcTexture;
     SDL_Texture* renderedBackgroundTexture;
-    double screenAngle;
+    SDL_Rect bgRect;
     int width, height;
     int centerX, centerY;
     int radius, innerRadius;

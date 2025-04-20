@@ -7,12 +7,15 @@
 #include <SDL2/SDL_image.h>
 #include <vector>
 
-Renderer::Renderer(int width, int height) : window(nullptr), renderer(nullptr), width(width), height(height){
+#ifndef RENDER_FLIP
 #if IS_RASPI
-    screenAngle = 180.0;
+#define RENDER_FLIP SDL_FLIP_VERTICAL
 #else
-    screenAngle = 0.0;
+#define RENDER_FLIP SDL_FLIP_NONE
 #endif
+#endif
+
+Renderer::Renderer(int width, int height) : window(nullptr), renderer(nullptr), width(width), height(height){
     centerX = width / 2;
     centerY = height / 2;
     radius = std::min(width, height) / 1.96;
@@ -55,7 +58,8 @@ void Renderer::start(){
 #if IS_RASPI
     SDL_ShowCursor(SDL_DISABLE);
 #endif
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
+    bgRect = {0, 0, width, height};
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     gearFont = TTF_OpenFont("../assets/trans.ttf", 270);
     gearGoalFont = TTF_OpenFont("../assets/trans.ttf", 80);
@@ -82,8 +86,7 @@ void Renderer::render(const VehicleData& data, float speed){
 
     SDL_RenderClear(renderer);
 
-    SDL_Rect bgRect = {0, 0, width, height};
-    SDL_RenderCopy(renderer, renderedBackgroundTexture, NULL, &bgRect);
+    SDL_RenderCopyEx(renderer, renderedBackgroundTexture, nullptr, &bgRect, 0, nullptr, RENDER_FLIP);
 
     renderGear(data.currentGear);
     renderGear(data.gearGoal, true);
@@ -139,9 +142,9 @@ void Renderer::renderLoadThrottleBars() {
     SDL_Rect loadTextureRect = {80, height - 65, 60, 60};
     SDL_Color engineLoadColor = smoothedLoad > 80.0f ? SDL_Color{255, 255, 20, 255} : SDL_Color{255, 255, 255, 255};
     SDL_SetTextureColorMod(engineLoadTexture, engineLoadColor.r, engineLoadColor.g, engineLoadColor.b);
-    SDL_RenderCopy(renderer, engineLoadTexture, NULL, &loadTextureRect);
+    SDL_RenderCopyEx(renderer, engineLoadTexture, nullptr, &loadTextureRect, 0, nullptr, RENDER_FLIP);
     SDL_Rect throttleTextureRect = {width - 80 - 50, height - 60, 60, 60};
-    SDL_RenderCopy(renderer, throttleTexture, NULL, &throttleTextureRect);
+    SDL_RenderCopyEx(renderer, throttleTexture, nullptr, &throttleTextureRect, 0, nullptr, RENDER_FLIP);
 }
 
 void Renderer::renderGear(int gear, bool goal) {
@@ -172,7 +175,7 @@ void Renderer::renderGear(int gear, bool goal) {
     }
 
     SDL_SetTextureColorMod(gearTexture, fillColor.r, fillColor.g, fillColor.b);
-    SDL_RenderCopy(renderer, gearTexture, nullptr, &gearRect);
+    SDL_RenderCopyEx(renderer, gearTexture, nullptr, &gearRect, 0, nullptr, RENDER_FLIP);
     SDL_FreeSurface(gearSurface);
     SDL_DestroyTexture(gearTexture);
 }
@@ -193,7 +196,7 @@ void Renderer::renderSpeed(float speed) {
         speedSurface->w,
         speedSurface->h
     };
-    SDL_RenderCopyEx(renderer, speedTexture, nullptr, &speedRect, 0, nullptr, SDL_FLIP_NONE);
+    SDL_RenderCopyEx(renderer, speedTexture, nullptr, &speedRect, 0, nullptr, RENDER_FLIP);
     SDL_FreeSurface(speedSurface);
     SDL_DestroyTexture(speedTexture);
 }
@@ -277,12 +280,12 @@ void Renderer::drawRPMNumbers() {
                 SDL_Rect outlineRect = numberRect;
                 outlineRect.x += offsetX;
                 outlineRect.y += offsetY;
-                SDL_RenderCopy(renderer, numberTexture, NULL, &outlineRect);
+                SDL_RenderCopyEx(renderer, numberTexture, nullptr, &outlineRect, 0, nullptr, RENDER_FLIP);
             }
         }
 
         SDL_SetTextureColorMod(numberTexture, numberColor.r, numberColor.g, numberColor.b);
-        SDL_RenderCopy(renderer, numberTexture, NULL, &numberRect);
+        SDL_RenderCopyEx(renderer, numberTexture, nullptr, &numberRect, 0, nullptr, RENDER_FLIP);
         SDL_FreeSurface(numberSurface);
         SDL_DestroyTexture(numberTexture);
     }
@@ -312,7 +315,7 @@ SDL_Texture* Renderer::loadTexture(const std::string& filePath) {
 void Renderer::renderInfoTexts(float ambientTemp, float coolantTemp, float batteryVoltage, bool clutchPressed) {
     auto renderIcon = [&](SDL_Texture* iconTexture, int x, int y, int size){
         SDL_Rect iconRect = {x, y, size, size};
-        SDL_RenderCopy(renderer, iconTexture, NULL, &iconRect);
+        SDL_RenderCopyEx(renderer, iconTexture, nullptr, &iconRect, 0, nullptr, RENDER_FLIP);
     };
     auto renderInfoTextWithIcon = [&](SDL_Texture* iconTexture, int x, int y, float value, const std::string& label, const SDL_Color& color) {
         int iconSize = 32;
@@ -323,7 +326,7 @@ void Renderer::renderInfoTexts(float ambientTemp, float coolantTemp, float batte
         SDL_Surface* textSurface = TTF_RenderText_Blended(infoFont, text.c_str(), color);
         SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
         SDL_Rect textRect = {x + iconSize + 5, y + (iconSize - textSurface->h) / 2, textSurface->w, textSurface->h};
-        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+        SDL_RenderCopyEx(renderer, textTexture, nullptr, &textRect, 0, nullptr, RENDER_FLIP);
         SDL_FreeSurface(textSurface);
         SDL_DestroyTexture(textTexture);
     };
