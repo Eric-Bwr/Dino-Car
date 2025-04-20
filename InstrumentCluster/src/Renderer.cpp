@@ -95,11 +95,7 @@ void Renderer::render(const VehicleData& data, float speed){
     renderInfoTexts(data.ambientTemp, data.coolantTemp, data.voltage, data.clutchPressed);
 
     SDL_SetRenderTarget(renderer, NULL);
-    SDL_RendererFlip flipFlags = SDL_FLIP_NONE;
-#if IS_RASPI
-    flipFlags = SDL_FLIP_VERTICAL;
-#endif
-    SDL_RenderCopyEx(renderer, renderTexture, nullptr, &bgRect, 0, nullptr, flipFlags);
+    SDL_RenderCopyEx(renderer, renderTexture, nullptr, &bgRect, 180, nullptr, SDL_FLIP_NONE);
 
     SDL_RenderPresent(renderer);
 }
