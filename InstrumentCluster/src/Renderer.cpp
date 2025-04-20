@@ -52,6 +52,11 @@ void Renderer::start(){
 #endif
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    renderTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
+    if (!renderTexture) {
+        std::cerr << "SDL_CreateTexture Error: " << SDL_GetError() << std::endl;
+        return;
+    }
     gearFont = TTF_OpenFont("../assets/trans.ttf", 270);
     gearGoalFont = TTF_OpenFont("../assets/trans.ttf", 80);
     speedFont = TTF_OpenFont("../assets/bebas.ttf", 100);
@@ -68,6 +73,7 @@ void Renderer::start(){
     absTexture = loadTexture("../assets/abs.png");
     tcTexture = loadTexture("../assets/tc.png");
     preRenderBackground();
+    bgRect = {0, 0, width, height};
 }
 
 void Renderer::render(const VehicleData& data, float speed){
@@ -75,9 +81,10 @@ void Renderer::render(const VehicleData& data, float speed){
     smoothedLoad = smoothingFactor * data.engineLoad + (1 - smoothingFactor) * smoothedLoad;
     smoothedThrottle = smoothingFactor * data.throttle + (1 - smoothingFactor) * smoothedThrottle;
 
+    SDL_SetRenderTarget(renderer, renderTexture);
+
     SDL_RenderClear(renderer);
 
-    SDL_Rect bgRect = {0, 0, width, height};
     SDL_RenderCopy(renderer, renderedBackgroundTexture, NULL, &bgRect);
 
     renderGear(data.currentGear);
@@ -86,6 +93,13 @@ void Renderer::render(const VehicleData& data, float speed){
     renderRPM();
     renderLoadThrottleBars();
     renderInfoTexts(data.ambientTemp, data.coolantTemp, data.voltage, data.clutchPressed);
+
+    SDL_SetRenderTarget(renderer, NULL);
+    SDL_RendererFlip flipFlags = SDL_FLIP_NONE;
+#if IS_RASPI
+    flipFlags = SDL_FLIP_VERTICAL;
+#endif
+    SDL_RenderCopyEx(renderer, renderTexture, nullptr, &bgRect, 0, nullptr, flipFlags);
 
     SDL_RenderPresent(renderer);
 }
