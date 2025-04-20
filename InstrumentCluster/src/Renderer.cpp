@@ -50,7 +50,7 @@ void Renderer::start(){
 #if IS_RASPI
     SDL_ShowCursor(SDL_DISABLE);
 #endif
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     gearFont = TTF_OpenFont("../assets/trans.ttf", 270);
     gearGoalFont = TTF_OpenFont("../assets/trans.ttf", 80);
