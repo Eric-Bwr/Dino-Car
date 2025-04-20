@@ -8,11 +8,6 @@
 #include <vector>
 
 Renderer::Renderer(int width, int height) : window(nullptr), renderer(nullptr), width(width), height(height){
-#if IS_RASPI
-    screenAngle = 180.0;
-#else
-    screenAngle = 0.0;
-#endif
     centerX = width / 2;
     centerY = height / 2;
     radius = std::min(width, height) / 1.96;
