@@ -23,9 +23,11 @@ int main() {
     SDL_Event event;
     bool running = true;
 
+    int gearGoal = -1;
+
     VehicleData data;
     while (running) {
-#if not IS_RASPI
+#if IS_RASPI
         data.engineRpm += 100;
         if (data.engineRpm > RPM_MAX) {
             data.currentGear++;
@@ -50,20 +52,21 @@ int main() {
             else if (event.type == SDL_KEYDOWN) {
                 switch (event.key.keysym.sym) {
                     case SDLK_a:
-                        data.gearGoal--;
-                        if(data.gearGoal < -1){
-                            data.gearGoal = -1;
+                        gearGoal--;
+                        if(gearGoal < -1){
+                            gearGoal = -1;
                         }
                         break;
                     case SDLK_d:
-                        data.gearGoal++;
-                        if(data.gearGoal > 6){
-                            data.gearGoal = 6;
+                        gearGoal++;
+                        if(gearGoal > 6){
+                            gearGoal = 6;
                         }
                         break;
                 }
             }
         }
+        data.gearGoal = gearGoal;
         renderer.render(data, calculateSpeed(data.engineRpm, data.currentGear));
         SDL_Delay(16);
     }
