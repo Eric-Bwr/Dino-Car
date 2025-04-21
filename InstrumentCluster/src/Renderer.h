@@ -54,6 +54,7 @@ private:
     SDL_Texture* renderedBackgroundTexture;
     SDL_Texture* renderTexture;
     SDL_Rect bgRect;
+    double screenAngle;
     int width, height;
     int centerX, centerY;
     int radius, innerRadius;

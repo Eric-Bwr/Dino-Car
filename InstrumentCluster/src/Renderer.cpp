@@ -13,6 +13,11 @@ Renderer::Renderer(int width, int height) : window(nullptr), renderer(nullptr), 
     radius = std::min(width, height) / 1.96;
     innerRadius = radius - 80;
     centerY += 10;
+#if IS_RASPI
+        screenAngle = 180.0;
+#else
+        screenAngle = 0.0;
+#endif
 }
 
 Renderer::~Renderer(){
@@ -95,7 +100,7 @@ void Renderer::render(const VehicleData& data, float speed){
     renderInfoTexts(data.ambientTemp, data.coolantTemp, data.voltage, data.clutchPressed);
 
     SDL_SetRenderTarget(renderer, NULL);
-    SDL_RenderCopyEx(renderer, renderTexture, nullptr, &bgRect, 180, nullptr, SDL_FLIP_NONE);
+    SDL_RenderCopyEx(renderer, renderTexture, nullptr, &bgRect, screenAngle, nullptr, SDL_FLIP_NONE);
 
     SDL_RenderPresent(renderer);
 }
