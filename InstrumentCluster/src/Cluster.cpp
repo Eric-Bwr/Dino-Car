@@ -46,6 +46,7 @@ int main() {
         data = arduino.getData();
 #endif
         while (SDL_PollEvent(&event)) {
+            arduino.setGearAngle(-1);
             if (event.type == SDL_QUIT) {
                 running = false;
             }
@@ -62,6 +63,15 @@ int main() {
                         if(gearGoal > 6){
                             gearGoal = 6;
                         }
+                        break;
+                    case SDLK_s:
+                        arduino.setGearAngle(0);
+                        break;
+                    case SDLK_x:
+                        arduino.setGearAngle(90);
+                        break;
+                    case SDLK_w:
+                        arduino.setGearAngle(180);
                         break;
                 }
             }

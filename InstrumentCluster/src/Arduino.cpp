@@ -25,7 +25,7 @@ void Arduino::start() {
             std::cout << "Arduino on: " << chosenPort << std::endl;
             serialPort.open(chosenPort);
             serialPort.set_option(boost::asio::serial_port_base::baud_rate(115200));
-            readSerial();
+            processSerial();
         } catch (const std::exception& e) {
             std::cerr << "Arduino connection failed: " << e.what() << std::endl;
             isRunning = false;
@@ -36,6 +36,10 @@ void Arduino::start() {
 void Arduino::stop() {
     isRunning = false;
     if (serialPort.is_open()) serialPort.close();
+}
+
+void Arduino::setGearAngle(int angle) {
+    gearAngle = angle;
 }
 
 VehicleData Arduino::getData() const {
@@ -59,7 +63,7 @@ std::string Arduino::findArduinoPort() {
     throw std::runtime_error("No Arduino found");
 }
 
-void Arduino::readSerial() {
+void Arduino::processSerial() {
     std::string buffer;
     std::regex re(R"(G:(\d+),R:(\d+),T:([\d\.]+),Th:([\d\.]+),L:([\d\.]+),A:([\d\.]+),V:([\d\.]+))");
     char c;
@@ -80,6 +84,11 @@ void Arduino::readSerial() {
                 buffer.clear();
             } else {
                 buffer += c;
+            }
+            if (gearAngle != -1) {
+                std::string command = "G:" + std::to_string(gearAngle) + "\n";
+                boost::asio::write(serialPort, boost::asio::buffer(command));
+                gearAngle = -1;
             }
         } catch (const std::exception& e) {
             if (isRunning) std::cerr << "Serial error: " << e.what() << std::endl;
