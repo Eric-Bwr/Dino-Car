@@ -27,7 +27,7 @@ int main() {
 
     VehicleData data;
     while (running) {
-#if IS_RASPI
+#if not IS_RASPI
         data.engineRpm += 100;
         if (data.engineRpm > RPM_MAX) {
             data.currentGear++;
@@ -41,7 +41,7 @@ int main() {
         data.voltage = ((float)data.engineRpm / RPM_MAX) * 15.0f;
         data.coolantTemp = ((float)data.engineRpm / RPM_MAX) * THROTTLE_MAX;
         data.engineLoad = ((float)data.engineRpm / RPM_MAX) * 100.0f;
-        data.throttle = ((float)data.engineRpm / RPM_MAX) * 80.0f;
+        data.throttle = ((float)data.engineRpm / RPM_MAX) * 72.0f;
 #else
         data = arduino.getData();
 #endif

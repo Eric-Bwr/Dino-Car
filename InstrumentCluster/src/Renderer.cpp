@@ -122,6 +122,15 @@ void Renderer::renderLoadThrottleBar(float startAngle, float endAngle, SDL_Color
     }
 }
 
+static SDL_Color lerpColor(SDL_Color c1, SDL_Color c2, float t) {
+    SDL_Color result;
+    result.r = (Uint8)(c1.r + (c2.r - c1.r) * t);
+    result.g = (Uint8)(c1.g + (c2.g - c1.g) * t);
+    result.b = (Uint8)(c1.b + (c2.b - c1.b) * t);
+    result.a = (Uint8)(c1.a + (c2.a - c1.a) * t);
+    return result;
+}
+
 void Renderer::renderLoadThrottleBars() {
     SDL_Color loadColor;
     float loadRatio = smoothedLoad / 100.0f;
@@ -131,16 +140,13 @@ void Renderer::renderLoadThrottleBars() {
     SDL_Color red = {255, 0, 0, 255};
 
     if (loadRatio < 0.7f) {
-        float ratio = loadRatio / 0.7f;
-        loadColor.r = (Uint8) (green.r * (1 - ratio) + yellow.r * ratio);
-        loadColor.g = (Uint8) (green.g * (1 - ratio) + yellow.g * ratio);
-        loadColor.b = (Uint8) (green.b * (1 - ratio) + yellow.b * ratio);
+        float t = loadRatio / 0.7f;
+        loadColor = lerpColor(green, yellow, t);
     } else {
-        float ratio = (loadRatio - 0.7f) / 0.3f;
-        loadColor.r = (Uint8) (yellow.r * (1 - ratio) + red.r * ratio);
-        loadColor.g = (Uint8) (yellow.g * (1 - ratio) + red.g * ratio);
-        loadColor.b = (Uint8) (yellow.b * (1 - ratio) + red.b * ratio);
+        float t = (loadRatio - 0.7f) / 0.3f;
+        loadColor = lerpColor(yellow, red, t);
     }
+
     loadColor.a = 140;
 
     renderLoadThrottleBar(LOAD_ANGLE_END, LOAD_ANGLE_START + (LOAD_ANGLE_END - LOAD_ANGLE_START) * (1.0 - smoothedLoad / 100.0f), loadColor, false);
@@ -209,9 +215,28 @@ void Renderer::renderSpeed(float speed) {
 }
 
 void Renderer::renderRPM() {
-    float rpmRatio = static_cast<float>(smoothedRpm) / RPM_MAX;
-    SDL_Color rpmColor = {216, 67, 21, 120};
+    Uint8 a = 160;
+    SDL_Color lightBlue = {20, 20, 230, a};
+    SDL_Color orange = {216, 67, 21, a};
+    SDL_Color red = {255, 20, 20, 200};
+    float rpm = smoothedRpm / 1000.0f;
+    SDL_Color rpmColor;
 
+    if (rpm <= 6.0f) {
+        rpmColor = lightBlue;
+    } else if (rpm <= 9.0f) {
+        float t = (rpm - 6.0f) / 3.0f;
+        rpmColor = lerpColor(lightBlue, orange, t);
+    } else if (rpm <= 9.5f) {
+        rpmColor = orange;
+    } else if (rpm <= 12.0f) {
+        float t = (rpm - 9.5f) / 2.5f;
+        rpmColor = lerpColor(orange, red, t);
+    } else {
+        rpmColor = red;
+    }
+
+    float rpmRatio = smoothedRpm / RPM_MAX;
     drawRPMArc(RPM_ARC_END_ANGLE, RPM_ARC_START_ANGLE - (RPM_ARC_START_ANGLE - RPM_ARC_END_ANGLE) * (1.0 - rpmRatio), rpmColor, false);
     drawRPMNumbers();
     drawNeedle(rpmRatio);
