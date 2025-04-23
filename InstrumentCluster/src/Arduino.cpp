@@ -85,10 +85,10 @@ void Arduino::processSerial() {
             } else {
                 buffer += c;
             }
-            if (gearAngle != -1 && gearAngle > 88 - 25 && gearAngle < 88 + 25) {
+            if (gearAngle != GEAR_NONE && gearAngle > 88 - 25 && gearAngle < 88 + 25) {
                 std::string command = "G:" + std::to_string(gearAngle) + "\n";
                 boost::asio::write(serialPort, boost::asio::buffer(command));
-                gearAngle = -1;
+                gearAngle = GEAR_NONE;
             }
         } catch (const std::exception& e) {
             if (isRunning) std::cerr << "Serial error: " << e.what() << std::endl;

@@ -12,16 +12,6 @@ float calculateSpeed(int rpm, int gear) {
     return speedMmPerMinute * 0.000001f * 60.0f;
 }
 
-enum Gear {
-    GEAR_N = 0,
-    GEAR_1 = 1,
-    GEAR_2 = 2,
-    GEAR_3 = 3,
-    GEAR_4 = 4,
-    GEAR_5 = 5,
-    GEAR_6 = 6
-};
-
 const int NEUTRAL_ANGLE = 88;
 const int SHIFT_UP_ANGLE = NEUTRAL_ANGLE - 20;
 const int SHIFT_DOWN_ANGLE = NEUTRAL_ANGLE + 20;
@@ -106,7 +96,7 @@ int main() {
         if (gearGoal == currentGear) {
             Uint32 now = SDL_GetTicks();
             if (!servoDetached && (now - lastShiftTime > 3000)) {
-                arduino.setGearAngle(-1);
+                arduino.setGearAngle(GEAR_NONE);
                 servoDetached = true;
             } else if (!servoDetached) {
                 arduino.setGearAngle(NEUTRAL_ANGLE);
@@ -122,7 +112,7 @@ int main() {
         }
 
         data.currentGear = currentGear;
-        data.gearGoal = currentGear == gearGoal ? -1 : gearGoal;
+        data.gearGoal = currentGear == gearGoal ? GEAR_NONE : gearGoal;
         renderer.render(data, calculateSpeed(data.engineRpm, data.currentGear));
         SDL_Delay(16);
     }

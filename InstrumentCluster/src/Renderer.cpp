@@ -161,7 +161,7 @@ void Renderer::renderLoadThrottleBars() {
 }
 
 void Renderer::renderGear(int gear, bool goal) {
-    if(goal && gear == -1){
+    if(goal && gear == GEAR_NONE){
         return;
     }
     std::string gearText = gear == 0 ? "N" : std::to_string(gear);

@@ -10,6 +10,17 @@ const float FINAL_DRIVE_RATIO = 12.42f;
 
 #define IS_RASPI (__arm__ || __aarch64__)
 
+enum Gear {
+    GEAR_NONE = -1,
+    GEAR_N = 0,
+    GEAR_1 = 1,
+    GEAR_2 = 2,
+    GEAR_3 = 3,
+    GEAR_4 = 4,
+    GEAR_5 = 5,
+    GEAR_6 = 6
+};
+
 const std::array<float, 7> GEAR_RATIOS = {
     0.0f,   // Neutral
     3.909f, // 1st gear
@@ -21,7 +32,7 @@ const std::array<float, 7> GEAR_RATIOS = {
 };
 
 struct VehicleData {
-    int gearGoal = -1;
+    int gearGoal = GEAR_NONE;
     int currentGear = 0;
     int engineRpm = 0;
     float coolantTemp = 0.0f;
