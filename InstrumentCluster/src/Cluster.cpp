@@ -1,8 +1,7 @@
+#include <SDL.h>
 #include "Arduino.h"
 #include "Renderer.h"
 #include "VehicleConstants.h"
-#include <array>
-#include <cmath>
 
 float calculateSpeed(int rpm, int gear) {
     if (gear <= 0 || gear >= GEAR_RATIOS.size() || rpm == 0) {
@@ -11,6 +10,49 @@ float calculateSpeed(int rpm, int gear) {
     float wheelCircumference = M_PI * WHEEL_DIAMETER_MM;
     float speedMmPerMinute = rpm * wheelCircumference / (GEAR_RATIOS[gear] * FINAL_DRIVE_RATIO);
     return speedMmPerMinute * 0.000001f * 60.0f;
+}
+
+enum Gear {
+    GEAR_N = 0,
+    GEAR_1 = 1,
+    GEAR_2 = 2,
+    GEAR_3 = 3,
+    GEAR_4 = 4,
+    GEAR_5 = 5,
+    GEAR_6 = 6
+};
+
+const int NEUTRAL_ANGLE = 88;
+const int SHIFT_UP_ANGLE = NEUTRAL_ANGLE - 20;
+const int SHIFT_DOWN_ANGLE = NEUTRAL_ANGLE + 20;
+
+int currentGear = GEAR_N;
+int gearGoal = GEAR_N;
+
+Uint32 lastShiftTime = 0;
+bool servoDetached = false;
+
+int getServoAngle(int fromGear, int toGear) {
+    if (toGear == fromGear) return NEUTRAL_ANGLE;
+    if (toGear > fromGear) return SHIFT_UP_ANGLE;
+    if (toGear < fromGear) return SHIFT_DOWN_ANGLE;
+    return NEUTRAL_ANGLE;
+}
+
+void shiftUp() {
+    if (gearGoal < GEAR_6) {
+        gearGoal++;
+        lastShiftTime = SDL_GetTicks();
+        servoDetached = false;
+    }
+}
+
+void shiftDown() {
+    if (gearGoal > GEAR_N) {
+        gearGoal--;
+        lastShiftTime = SDL_GetTicks();
+        servoDetached = false;
+    }
 }
 
 int main() {
@@ -23,9 +65,10 @@ int main() {
     SDL_Event event;
     bool running = true;
 
-    int gearGoal = -1;
-
     VehicleData data;
+
+    lastShiftTime = SDL_GetTicks();
+
     while (running) {
 #if not IS_RASPI
         data.engineRpm += 100;
@@ -46,37 +89,40 @@ int main() {
         data = arduino.getData();
 #endif
         while (SDL_PollEvent(&event)) {
-            //arduino.setGearAngle(-1);
             if (event.type == SDL_QUIT) {
                 running = false;
-            }
-            else if (event.type == SDL_KEYDOWN) {
+            } else if (event.type == SDL_KEYDOWN) {
                 switch (event.key.keysym.sym) {
                     case SDLK_a:
-                        gearGoal--;
-                        if(gearGoal < -1){
-                            gearGoal = -1;
-                        }
+                        shiftDown();
                         break;
                     case SDLK_d:
-                        gearGoal++;
-                        if(gearGoal > 6){
-                            gearGoal = 6;
-                        }
-                        break;
-                    case SDLK_s:
-                        arduino.setGearAngle(88);
-                        break;
-                    case SDLK_x:
-                        arduino.setGearAngle(88 - 35);
-                        break;
-                    case SDLK_w:
-                        arduino.setGearAngle(88 + 30);
+                        shiftUp();
                         break;
                 }
             }
         }
-        data.gearGoal = gearGoal;
+
+        if (gearGoal == currentGear) {
+            Uint32 now = SDL_GetTicks();
+            if (!servoDetached && (now - lastShiftTime > 3000)) {
+                arduino.setGearAngle(-1);
+                servoDetached = true;
+            } else if (!servoDetached) {
+                arduino.setGearAngle(NEUTRAL_ANGLE);
+            }
+        } else {
+            int angle = getServoAngle(currentGear, gearGoal);
+            arduino.setGearAngle(angle);
+            lastShiftTime = SDL_GetTicks();
+            servoDetached = false;
+#if not IS_RASPI
+            currentGear = gearGoal;
+#endif
+        }
+
+        data.currentGear = currentGear;
+        data.gearGoal = currentGear == gearGoal ? -1 : gearGoal;
         renderer.render(data, calculateSpeed(data.engineRpm, data.currentGear));
         SDL_Delay(16);
     }
