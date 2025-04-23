@@ -46,7 +46,7 @@ int main() {
         data = arduino.getData();
 #endif
         while (SDL_PollEvent(&event)) {
-            arduino.setGearAngle(-1);
+            //arduino.setGearAngle(-1);
             if (event.type == SDL_QUIT) {
                 running = false;
             }
@@ -65,13 +65,13 @@ int main() {
                         }
                         break;
                     case SDLK_s:
-                        arduino.setGearAngle(0);
+                        arduino.setGearAngle(88);
                         break;
                     case SDLK_x:
-                        arduino.setGearAngle(90);
+                        arduino.setGearAngle(88 - 35);
                         break;
                     case SDLK_w:
-                        arduino.setGearAngle(180);
+                        arduino.setGearAngle(88 + 30);
                         break;
                 }
             }

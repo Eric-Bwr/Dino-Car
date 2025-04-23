@@ -104,4 +104,5 @@ void loop() {
     gearServo.detach();
     servoAttached = false;
   }
+  delay(1);
 }
