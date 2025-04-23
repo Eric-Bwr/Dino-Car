@@ -21,6 +21,8 @@ int gearGoal = GEAR_N;
 
 Uint32 lastShiftTime = 0;
 bool servoDetached = false;
+bool canShift = true;
+const Uint32 SHIFT_COOLDOWN_MS = 2000;
 
 int getServoAngle(int fromGear, int toGear) {
     if (toGear == fromGear) return NEUTRAL_ANGLE;
@@ -30,18 +32,20 @@ int getServoAngle(int fromGear, int toGear) {
 }
 
 void shiftUp() {
-    if (gearGoal < GEAR_6) {
+    if (canShift && gearGoal < GEAR_6) {
         gearGoal++;
         lastShiftTime = SDL_GetTicks();
         servoDetached = false;
+        canShift = false;
     }
 }
 
 void shiftDown() {
-    if (gearGoal > GEAR_N) {
+    if (canShift && gearGoal > GEAR_N) {
         gearGoal--;
         lastShiftTime = SDL_GetTicks();
         servoDetached = false;
+        canShift = false;
     }
 }
 
@@ -93,9 +97,13 @@ int main() {
             }
         }
 
+        Uint32 now = SDL_GetTicks();
+        if (!canShift && (now - lastShiftTime > SHIFT_COOLDOWN_MS)) {
+            canShift = true;
+        }
+
         if (gearGoal == currentGear) {
-            Uint32 now = SDL_GetTicks();
-            if (!servoDetached && (now - lastShiftTime > 3000)) {
+            if (!servoDetached && (now - lastShiftTime > SHIFT_COOLDOWN_MS)) {
                 arduino.setGearAngle(GEAR_NONE);
                 servoDetached = true;
             } else if (!servoDetached) {
