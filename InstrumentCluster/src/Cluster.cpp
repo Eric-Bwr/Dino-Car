@@ -23,8 +23,9 @@ enum ShiftDirection { SHIFT_NONE, SHIFT_UP, SHIFT_DOWN };
 ShiftDirection lastShiftDirection = SHIFT_NONE;
 
 int getServoAngle(int fromGear, int toGear) {
-    if (fromGear == GEAR_N && toGear == GEAR_1) return SHIFT_DOWN_ANGLE - 5;
-    if (fromGear == GEAR_1 && toGear == GEAR_N) return SHIFT_UP_ANGLE + 10;
+    if (fromGear == GEAR_N && toGear == GEAR_1) return SHIFT_DOWN_ANGLE;
+    if (fromGear == GEAR_1 && toGear == GEAR_N) return SHIFT_UP_ANGLE;
+    if (fromGear == GEAR_2 && toGear == GEAR_N) return SHIFT_DOWN_ANGLE - 5;
     if (toGear == fromGear) return NEUTRAL_ANGLE;
     if (toGear > fromGear) return SHIFT_UP_ANGLE;
     if (toGear < fromGear) return SHIFT_DOWN_ANGLE;
@@ -37,6 +38,10 @@ void shiftUp() {
         lastShiftTime = SDL_GetTicks();
         servoDetached = false;
         canShift = false;
+        if (gearGoal == GEAR_1) {
+            lastShiftDirection = SHIFT_DOWN;
+            return;
+        }
         lastShiftDirection = SHIFT_UP;
     }
 }
