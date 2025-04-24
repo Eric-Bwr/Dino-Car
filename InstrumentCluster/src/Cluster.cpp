@@ -18,8 +18,9 @@ Uint32 lastShiftTime = 0;
 bool servoDetached = false;
 bool canShift = true;
 const Uint32 SHIFT_COOLDOWN_MS = 1600;
-const int BACKLASH_COMPENSATION = 5;
-
+const int BACKLASH_COMPENSATION = 10;
+enum ShiftDirection { SHIFT_NONE, SHIFT_UP, SHIFT_DOWN };
+ShiftDirection lastShiftDirection = SHIFT_NONE;
 
 int getServoAngle(int fromGear, int toGear) {
     if (fromGear == GEAR_N && toGear == GEAR_1) return SHIFT_DOWN_ANGLE - 5;
@@ -36,6 +37,7 @@ void shiftUp() {
         lastShiftTime = SDL_GetTicks();
         servoDetached = false;
         canShift = false;
+        lastShiftDirection = SHIFT_UP;
     }
 }
 
@@ -45,6 +47,7 @@ void shiftDown() {
         lastShiftTime = SDL_GetTicks();
         servoDetached = false;
         canShift = false;
+        lastShiftDirection = SHIFT_DOWN;
     }
 }
 
@@ -106,7 +109,13 @@ int main() {
                 arduino.setGearAngle(GEAR_NONE);
                 servoDetached = true;
             } else if (!servoDetached) {
-                arduino.setGearAngle(NEUTRAL_ANGLE);
+                int compensatedAngle = NEUTRAL_ANGLE;
+                if (lastShiftDirection == SHIFT_UP) {
+                    compensatedAngle = NEUTRAL_ANGLE + BACKLASH_COMPENSATION;
+                } else if (lastShiftDirection == SHIFT_DOWN) {
+                    compensatedAngle = NEUTRAL_ANGLE - BACKLASH_COMPENSATION;
+                }
+                arduino.setGearAngle(compensatedAngle);
             }
         } else {
             int angle = getServoAngle(data.currentGear, gearGoal);
