@@ -18,7 +18,7 @@ Uint32 lastShiftTime = 0;
 bool servoDetached = false;
 bool canShift = true;
 const Uint32 SHIFT_COOLDOWN_MS = 1600;
-const int BACKLASH_COMPENSATION = 10;
+const int BACKLASH_COMPENSATION = 8;
 enum ShiftDirection { SHIFT_NONE, SHIFT_UP, SHIFT_DOWN };
 ShiftDirection lastShiftDirection = SHIFT_NONE;
 
