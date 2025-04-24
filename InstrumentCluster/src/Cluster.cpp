@@ -12,19 +12,18 @@ float calculateSpeed(int rpm, int gear) {
     return speedMmPerMinute * 0.000001f * 60.0f;
 }
 
-const int NEUTRAL_ANGLE = 88;
-const int SHIFT_UP_ANGLE = NEUTRAL_ANGLE - 20;
-const int SHIFT_DOWN_ANGLE = NEUTRAL_ANGLE + 20;
-
-int currentGear = GEAR_N;
 int gearGoal = GEAR_N;
 
 Uint32 lastShiftTime = 0;
 bool servoDetached = false;
 bool canShift = true;
-const Uint32 SHIFT_COOLDOWN_MS = 2000;
+const Uint32 SHIFT_COOLDOWN_MS = 1600;
+const int BACKLASH_COMPENSATION = 5;
+
 
 int getServoAngle(int fromGear, int toGear) {
+    if (fromGear == GEAR_N && toGear == GEAR_1) return SHIFT_DOWN_ANGLE - 5;
+    if (fromGear == GEAR_1 && toGear == GEAR_N) return SHIFT_UP_ANGLE + 10;
     if (toGear == fromGear) return NEUTRAL_ANGLE;
     if (toGear > fromGear) return SHIFT_UP_ANGLE;
     if (toGear < fromGear) return SHIFT_DOWN_ANGLE;
@@ -64,7 +63,7 @@ int main() {
     lastShiftTime = SDL_GetTicks();
 
     while (running) {
-#if not IS_RASPI
+#if IS_RASPI
         data.engineRpm += 100;
         if (data.engineRpm > RPM_MAX) {
             data.currentGear++;
@@ -102,7 +101,7 @@ int main() {
             canShift = true;
         }
 
-        if (gearGoal == currentGear) {
+        if (gearGoal == data.currentGear) {
             if (!servoDetached && (now - lastShiftTime > SHIFT_COOLDOWN_MS)) {
                 arduino.setGearAngle(GEAR_NONE);
                 servoDetached = true;
@@ -110,17 +109,13 @@ int main() {
                 arduino.setGearAngle(NEUTRAL_ANGLE);
             }
         } else {
-            int angle = getServoAngle(currentGear, gearGoal);
+            int angle = getServoAngle(data.currentGear, gearGoal);
             arduino.setGearAngle(angle);
             lastShiftTime = SDL_GetTicks();
             servoDetached = false;
-#if not IS_RASPI
-            currentGear = gearGoal;
-#endif
         }
 
-        data.currentGear = currentGear;
-        data.gearGoal = currentGear == gearGoal ? GEAR_NONE : gearGoal;
+        data.gearGoal = data.currentGear == gearGoal ? GEAR_NONE : gearGoal;
         renderer.render(data, calculateSpeed(data.engineRpm, data.currentGear));
         SDL_Delay(16);
     }
