@@ -8,9 +8,9 @@ const float THROTTLE_MAX = 72.0f;
 const float WHEEL_DIAMETER_MM = 360.4f;
 const float FINAL_DRIVE_RATIO = 12.42f;
 
-const int NEUTRAL_ANGLE = 84;
-const int SHIFT_UP_ANGLE = NEUTRAL_ANGLE - 28;
-const int SHIFT_DOWN_ANGLE = NEUTRAL_ANGLE + 24;
+const int NEUTRAL_ANGLE = 82;
+const int SHIFT_UP_ANGLE = NEUTRAL_ANGLE - 29;
+const int SHIFT_DOWN_ANGLE = NEUTRAL_ANGLE + 25;
 
 #define IS_RASPI (__arm__ || __aarch64__)
 
