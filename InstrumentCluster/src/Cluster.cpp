@@ -1,4 +1,6 @@
+#include <iostream>
 #include <SDL.h>
+#include <wiringPi.h>
 #include "Arduino.h"
 #include "Renderer.h"
 #include "VehicleConstants.h"
@@ -56,6 +58,10 @@ void shiftDown() {
     }
 }
 
+const int PROX_PIN = 15;  // Proximity-Sensor (Pin 8)
+const int BTN1_PIN = 26;  // Button 1 (Pin 32)
+const int BTN2_PIN = 27;  // Button 2 (Pin 36)
+
 int main() {
     Arduino arduino;
     arduino.start();
@@ -69,9 +75,19 @@ int main() {
     VehicleData data;
 
     lastShiftTime = SDL_GetTicks();
-
-    while (running) {
 #if IS_RASPI
+    wiringPiSetup();
+
+    pinMode(PROX_PIN, INPUT);
+    pinMode(BTN1_PIN, INPUT);
+    pinMode(BTN2_PIN, INPUT);
+
+    pullUpDnControl(PROX_PIN, PUD_UP);
+    pullUpDnControl(BTN1_PIN, PUD_UP);
+    pullUpDnControl(BTN2_PIN, PUD_UP);
+#endif
+    while (running) {
+#if not IS_RASPI
         data.engineRpm += 100;
         if (data.engineRpm > RPM_MAX) {
             data.currentGear++;
@@ -88,7 +104,25 @@ int main() {
         data.throttle = ((float)data.engineRpm / RPM_MAX) * 72.0f;
 #else
         data = arduino.getData();
+
+        int proximity = digitalRead(PROX_PIN);
+        int button1 = digitalRead(BTN1_PIN);
+        int button2 = digitalRead(BTN2_PIN);
+
+        data.clutchPressed = proximity == LOW;
+        if(proximity == LOW) {
+            std::cout << "proximity" << std::endl;
+        }
+
+        if(button1 == LOW) {
+            std::cout << "Button 1" << std::endl;
+        }
+
+        if(button2 == LOW) {
+            std::cout << "Button 2" << std::endl;
+        }
 #endif
+
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = false;
