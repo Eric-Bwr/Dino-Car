@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 const int RPM_MAX = 12000;
 const float THROTTLE_MAX = 72.0f;
 const int WARNING_LIGHTS_RPM = 8000;

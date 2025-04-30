@@ -1,6 +1,5 @@
 #pragma once
 
-#include <boost/asio.hpp>
 #include <string>
 #include <atomic>
 #include <thread>
@@ -19,8 +18,7 @@ private:
     std::string findArduinoPort();
     std::atomic<bool> isRunning;
     VehicleData data;
-    boost::asio::io_context ioContext;
-    boost::asio::serial_port serialPort;
     std::thread serialThread;
     std::atomic_int gearAngle = -1;
+    int fd;
 };
