@@ -18,8 +18,6 @@ void Renderer::preRenderBackground(){
 
     renderLoadThrottleBarBackground();
 
-    renderTrackText();
-
     SDL_SetRenderTarget(renderer, NULL);
 }
 
@@ -55,33 +53,4 @@ void Renderer::renderLoadThrottleBarBackground(){
 
     renderLoadThrottleBar(LOAD_ANGLE_START, LOAD_ANGLE_END, {255, 255, 255, 200}, true);
     renderLoadThrottleBar(THROTTLE_ANGLE_START, THROTTLE_ANGLE_END, {255, 255, 255, 200}, true);
-}
-
-void Renderer::renderTrackText(){
-    SDL_Color outlineColor = {216, 67, 21, 255};
-    SDL_Color fillColor = {0, 0, 0, 255};
-    SDL_Surface* gearSurface = TTF_RenderText_Blended(trackFont, "TRACK", {255,255,255,255});
-    SDL_Texture* gearTexture = SDL_CreateTextureFromSurface(renderer, gearSurface);
-    SDL_Rect gearRect = {
-            (width - gearSurface->w) / 2 + 90,
-            centerY - gearSurface->h / 2 + 84,
-            gearSurface->w,
-            gearSurface->h
-    };
-
-    SDL_SetTextureColorMod(gearTexture, outlineColor.r, outlineColor.g, outlineColor.b);
-    for (int dx = -1; dx <= 2; ++dx) {
-        for (int dy = -1; dy <= 2; ++dy) {
-            if (dx == 0 && dy == 0) continue;
-            SDL_Rect outlineRect = gearRect;
-            outlineRect.x += dx;
-            outlineRect.y += dy;
-            SDL_RenderCopy(renderer, gearTexture, nullptr, &outlineRect);
-        }
-    }
-
-    SDL_SetTextureColorMod(gearTexture, fillColor.r, fillColor.g, fillColor.b);
-    SDL_RenderCopy(renderer, gearTexture, nullptr, &gearRect);
-    SDL_FreeSurface(gearSurface);
-    SDL_DestroyTexture(gearTexture);
 }

@@ -90,6 +90,7 @@ void Renderer::render(const VehicleData& data, float speed){
 
     SDL_RenderClear(renderer);
 
+    SDL_SetTextureColorMod(renderedBackgroundTexture, 255, 150, 150);
     SDL_RenderCopy(renderer, renderedBackgroundTexture, NULL, &bgRect);
 
     renderGear(data.currentGear);
@@ -97,6 +98,7 @@ void Renderer::render(const VehicleData& data, float speed){
     renderSpeed(speed);
     renderRPM();
     renderLoadThrottleBars();
+    renderModiText(data.driveMode);
     renderInfoTexts(data.ambientTemp, data.coolantTemp, data.voltage, data.clutchPressed);
 
     SDL_SetRenderTarget(renderer, NULL);
@@ -468,4 +470,33 @@ void Renderer::generateArcPoints(float startAngle, float endAngle, int outerRad,
         vX[(numPoints * 2) - 1 - i] = short((float)centerX - r * cosf(angleRad));
         vY[(numPoints * 2) - 1 - i] = short((float)centerY + r * sinf(angleRad));
     }
+}
+
+void Renderer::renderModiText(const DriveMode mode){
+    SDL_Color outlineColor = {216, 67, 21, 255};
+    SDL_Color fillColor = {0, 0, 0, 255};
+    SDL_Surface* gearSurface = TTF_RenderText_Blended(trackFont, mode == DriveMode::TRACK ? "TRACK" : "SPORT", {255,255,255,255});
+    SDL_Texture* gearTexture = SDL_CreateTextureFromSurface(renderer, gearSurface);
+    SDL_Rect gearRect = {
+        (width - gearSurface->w) / 2 + 90,
+        centerY - gearSurface->h / 2 + 84,
+        gearSurface->w,
+        gearSurface->h
+    };
+
+    SDL_SetTextureColorMod(gearTexture, outlineColor.r, outlineColor.g, outlineColor.b);
+    for (int dx = -1; dx <= 2; ++dx) {
+        for (int dy = -1; dy <= 2; ++dy) {
+            if (dx == 0 && dy == 0) continue;
+            SDL_Rect outlineRect = gearRect;
+            outlineRect.x += dx;
+            outlineRect.y += dy;
+            SDL_RenderCopy(renderer, gearTexture, nullptr, &outlineRect);
+        }
+    }
+
+    SDL_SetTextureColorMod(gearTexture, fillColor.r, fillColor.g, fillColor.b);
+    SDL_RenderCopy(renderer, gearTexture, nullptr, &gearRect);
+    SDL_FreeSurface(gearSurface);
+    SDL_DestroyTexture(gearTexture);
 }

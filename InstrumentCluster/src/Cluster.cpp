@@ -96,6 +96,7 @@ int main() {
             }
             data.engineRpm = 0;
             data.clutchPressed = !data.clutchPressed;
+            data.driveMode = data.driveMode == SPORT ? TRACK : SPORT;
         }
         data.ambientTemp = 20.5;
         data.voltage = ((float)data.engineRpm / RPM_MAX) * 15.0f;

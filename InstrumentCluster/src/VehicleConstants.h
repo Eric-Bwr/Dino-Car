@@ -17,6 +17,11 @@ const int SHIFT_DOWN_ANGLE = NEUTRAL_ANGLE + 25;
 
 #define IS_RASPI (__arm__ || __aarch64__)
 
+enum DriveMode {
+    SPORT,
+    TRACK
+};
+
 enum Gear {
     GEAR_NONE = -1,
     GEAR_N = 0,
@@ -47,4 +52,5 @@ struct VehicleData {
     float ambientTemp = 0.0f;
     float voltage = 0.0f;
     bool clutchPressed = false;
+    DriveMode driveMode;
 };

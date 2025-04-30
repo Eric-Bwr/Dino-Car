@@ -28,7 +28,7 @@ private:
     void drawRPMNumbers();
     void renderLoadThrottleBars();
     void renderInfoTexts(float ambientTemp, float coolantTemp, float batteryVoltage, bool clutchPressed);
-    void renderTrackText();
+    void renderModiText(DriveMode mode);
     void generateArcPoints(float startAngle, float endAngle, int outerRad, int innerRad, std::vector<Sint16>& vX, std::vector<Sint16>& vY, bool outline = false) const;
     void preRenderBackground();
     void renderLoadThrottleBarBackground();
