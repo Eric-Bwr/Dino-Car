@@ -7,6 +7,7 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <errno.h>
+#include <cstring>
 
 Arduino::Arduino() :
     isRunning(false) {}
