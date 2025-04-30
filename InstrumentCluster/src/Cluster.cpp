@@ -102,6 +102,21 @@ int main() {
         data.coolantTemp = ((float)data.engineRpm / RPM_MAX) * THROTTLE_MAX;
         data.engineLoad = ((float)data.engineRpm / RPM_MAX) * 100.0f;
         data.throttle = ((float)data.engineRpm / RPM_MAX) * 72.0f;
+
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                running = false;
+            } else if (event.type == SDL_KEYDOWN) {
+                switch (event.key.keysym.sym) {
+                case SDLK_a:
+                    shiftDown();
+                    break;
+                case SDLK_d:
+                    shiftUp();
+                    break;
+                }
+            }
+        }
 #else
         data = arduino.getData();
 
@@ -122,21 +137,6 @@ int main() {
             std::cout << "Button 2" << std::endl;
         }
 #endif
-
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                running = false;
-            } else if (event.type == SDL_KEYDOWN) {
-                switch (event.key.keysym.sym) {
-                    case SDLK_a:
-                        shiftDown();
-                        break;
-                    case SDLK_d:
-                        shiftUp();
-                        break;
-                }
-            }
-        }
 
         Uint32 now = SDL_GetTicks();
         if (!canShift && (now - lastShiftTime > SHIFT_COOLDOWN_MS)) {
