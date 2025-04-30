@@ -65,35 +65,23 @@ std::string Arduino::findArduinoPort() {
 
 void Arduino::processSerial() {
     std::string buffer;
-    std::vector<std::string> parts;
+    std::regex re(R"(G:(\d+),R:(\d+),T:([\d\.]+),Th:([\d\.]+),L:([\d\.]+),A:([\d\.]+),V:([\d\.]+))");
     char c;
     while (isRunning) {
         try {
             boost::asio::read(serialPort, boost::asio::buffer(&c, 1));
             if (c == '\n') {
-                std::istringstream iss(buffer);
-                std::string token;
-
-                while (std::getline(iss, token, ',')) {
-                    parts.push_back(token);
+                std::smatch match;
+                if (std::regex_search(buffer, match, re) && match.size() == 8) {
+                    data.currentGear = std::stoi(match[1]);
+                    data.engineRpm = std::stoi(match[2]);
+                    data.coolantTemp = std::stof(match[3]);
+                    data.throttle = std::stof(match[4]);
+                    data.engineLoad = std::stof(match[5]);
+                    data.ambientTemp = std::stof(match[6]);
+                    data.voltage = std::stof(match[7]);
                 }
-
-                if (parts.size() >= 7) {
-                    try {
-                        data.currentGear = std::stoi(parts[0].substr(2));
-                        data.engineRpm = std::stoi(parts[1].substr(2));
-                        data.coolantTemp = std::stof(parts[2].substr(2));
-                        data.throttle = std::stof(parts[3].substr(3));
-                        data.engineLoad = std::stof(parts[4].substr(2));
-                        data.ambientTemp = std::stof(parts[5].substr(2));
-                        data.voltage = std::stof(parts[6].substr(2));
-                    } catch (...) {
-                        std::cerr << "Parsing error" << std::endl;
-                    }
-                }
-
                 buffer.clear();
-                parts.clear();
             } else {
                 buffer += c;
             }

@@ -124,16 +124,16 @@ int main() {
         int button1 = digitalRead(BTN1_PIN);
         int button2 = digitalRead(BTN2_PIN);
 
-        data.clutchPressed = proximity == LOW;
-        if(proximity == LOW) {
+        data.clutchPressed = proximity == HIGH;
+        if(proximity == HIGH) {
             std::cout << "proximity" << std::endl;
         }
 
-        if(button1 == LOW) {
+        if(button1 == HIGH) {
             std::cout << "Button 1" << std::endl;
         }
 
-        if(button2 == LOW) {
+        if(button2 == HIGH) {
             std::cout << "Button 2" << std::endl;
         }
 #endif
