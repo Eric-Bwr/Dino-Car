@@ -3,7 +3,7 @@
 #include <vector>
 
 const int RPM_MAX = 12000;
-const float THROTTLE_MAX = 72.0f;
+const float THROTTLE_MAX = 80.0f;
 const int WARNING_LIGHTS_RPM = 8000;
 const int WARNING_ARC_RPM = 8500;
 
