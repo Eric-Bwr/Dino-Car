@@ -12,7 +12,7 @@ find_library(WIRINGPI_LIB wiringPi REQUIRED)
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 add_executable(Cluster ${SOURCES})
 
-target_compile_options(Cluster PRIVATE -O2 -Wall)
+target_compile_options(Cluster PRIVATE -O0 -Wall)
 
 target_include_directories(Cluster PRIVATE
         ${SDL2_INCLUDE_DIRS}
