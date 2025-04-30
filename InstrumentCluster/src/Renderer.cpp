@@ -216,11 +216,37 @@ void Renderer::renderSpeed(float speed) {
 
 void Renderer::renderRPM() {
     Uint8 a = 160;
+    Uint8 minAlpha = 80;
     SDL_Color lightBlue = {20, 20, 230, a};
     SDL_Color orange = {216, 67, 21, a};
     SDL_Color red = {255, 20, 20, 200};
     float rpm = smoothedRpm / 1000.0f;
     SDL_Color rpmColor;
+
+    Uint32 currentTime = SDL_GetTicks();
+
+    const int alphaStep = 30;
+
+    if (smoothedRpm >= WARNING_ARC_RPM) {
+        if (currentTime - lastRpmFlashToggleTime >= rpmFlashInterval) {
+            lastRpmFlashToggleTime = currentTime;
+            if (rpmAlphaIncreasing) {
+                rpmAlpha += alphaStep;
+                if (rpmAlpha >= a) {
+                    rpmAlpha = a;
+                    rpmAlphaIncreasing = false;
+                }
+            } else {
+                rpmAlpha -= alphaStep;
+                if (rpmAlpha <= minAlpha) {
+                    rpmAlpha = minAlpha;
+                    rpmAlphaIncreasing = true;
+                }
+            }
+        }
+    } else {
+        rpmAlpha = a;
+    }
 
     if (rpm <= 6.0f) {
         rpmColor = lightBlue;
@@ -234,6 +260,12 @@ void Renderer::renderRPM() {
         rpmColor = lerpColor(orange, red, t);
     } else {
         rpmColor = red;
+    }
+
+    if (smoothedRpm >= WARNING_LIGHTS_RPM) {
+        rpmColor.a = rpmAlpha;
+    } else {
+        rpmColor.a = a;
     }
 
     float rpmRatio = smoothedRpm / RPM_MAX;
@@ -389,14 +421,21 @@ void Renderer::renderInfoTexts(float ambientTemp, float coolantTemp, float batte
     SDL_SetTextureColorMod(clutchTexture, clutchColor.r, clutchColor.g, clutchColor.b);
     renderIcon(clutchTexture, width - 164, y, 40);
 
-    if(smoothedRpm < 6000){
-        return;
+    if (smoothedRpm >= WARNING_LIGHTS_RPM) {
+        Uint32 currentTime = SDL_GetTicks();
+        if (currentTime - lastWarningToggleTime >= warningBlinkInterval) {
+            warningLightVisible = !warningLightVisible;
+            lastWarningToggleTime = currentTime;
+        }
+
+        if (warningLightVisible) {
+            SDL_Color warningColor = {255, 255, 20, 255};
+            SDL_SetTextureColorMod(absTexture, warningColor.r, warningColor.g, warningColor.b);
+            renderIcon(absTexture, width / 2 - 80, height - 66, 80);
+            SDL_SetTextureColorMod(tcTexture, warningColor.r, warningColor.g, warningColor.b);
+            renderIcon(tcTexture, width / 2 + 20, height - 46, 42);
+        }
     }
-    SDL_Color warningColor = {255, 255, 20, 255};
-    SDL_SetTextureColorMod(absTexture, warningColor.r, warningColor.g, warningColor.b);
-    renderIcon(absTexture, width / 2 - 80, height - 66, 80);
-    SDL_SetTextureColorMod(tcTexture, warningColor.r, warningColor.g, warningColor.b);
-    renderIcon(tcTexture, width / 2 + 20, height - 46, 42);
 }
 
 void Renderer::generateArcPoints(float startAngle, float endAngle, int outerRad, int innerRad, std::vector<Sint16>& vX, std::vector<Sint16>& vY, bool outline) const{

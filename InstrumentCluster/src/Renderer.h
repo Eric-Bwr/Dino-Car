@@ -62,4 +62,11 @@ private:
     float smoothedLoad = 0.0f;
     float smoothedThrottle = 0.0f;
     const float smoothingFactor = 0.7f;
+    Uint32 lastWarningToggleTime = 0;
+    bool warningLightVisible = true;
+    const Uint32 warningBlinkInterval = 200;
+    Uint32 lastRpmFlashToggleTime = 0;
+    bool rpmAlphaIncreasing = true;
+    int rpmAlpha = 160;
+    const Uint32 rpmFlashInterval = 50;
 };
