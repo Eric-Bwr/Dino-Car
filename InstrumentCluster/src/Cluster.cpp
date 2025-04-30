@@ -15,7 +15,7 @@ float calculateSpeed(int rpm, int gear) {
 }
 
 int gearGoal = GEAR_N;
-
+bool clutchPressed = false;
 Uint32 lastShiftTime = 0;
 bool servoDetached = false;
 bool canShift = true;
@@ -35,7 +35,7 @@ int getServoAngle(int fromGear, int toGear) {
 }
 
 void shiftUp() {
-    if (canShift && gearGoal < GEAR_6) {
+    if (canShift && gearGoal < GEAR_6 && clutchPressed) {
         gearGoal++;
         lastShiftTime = SDL_GetTicks();
         servoDetached = false;
@@ -49,7 +49,7 @@ void shiftUp() {
 }
 
 void shiftDown() {
-    if (canShift && gearGoal > GEAR_N) {
+    if (canShift && gearGoal > GEAR_N && clutchPressed) {
         gearGoal--;
         lastShiftTime = SDL_GetTicks();
         servoDetached = false;
@@ -124,14 +124,14 @@ int main() {
         int button1 = digitalRead(BTN1_PIN);
         int button2 = digitalRead(BTN2_PIN);
 
-        data.clutchPressed = proximity == LOW;
+        data.clutchPressed = clutchPressed = proximity == LOW;
 
         if(button1 == LOW) {
-            std::cout << "Button 1" << std::endl;
+            shiftUp();
         }
 
         if(button2 == LOW) {
-            std::cout << "Button 2" << std::endl;
+            shiftDown();
         }
 #endif
 
