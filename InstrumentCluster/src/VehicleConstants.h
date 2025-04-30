@@ -1,14 +1,15 @@
 #pragma once
 
-#include <array>
-
 const int RPM_MAX = 12000;
 const float THROTTLE_MAX = 72.0f;
 const int WARNING_LIGHTS_RPM = 8000;
 const int WARNING_ARC_RPM = 8500;
 
-const float WHEEL_DIAMETER_MM = 360.4f;
-const float FINAL_DRIVE_RATIO = 12.42f;
+const float WHEEL_DIAMETER_MM = 420.0f;
+const float PRIMARY_REDUCTION = 72.0f / 22.0f; // ~3.2727
+const float SECONDARY_REDUCTION = 37.0f / 15.0f; // ~2.47
+const float INVERT_GEARBOX_REDUCTION = 5.0f / 4.0f; // 1.25
+const float FINAL_DRIVE_RATIO = PRIMARY_REDUCTION * SECONDARY_REDUCTION * INVERT_GEARBOX_REDUCTION;
 
 const int NEUTRAL_ANGLE = 82;
 const int SHIFT_UP_ANGLE = NEUTRAL_ANGLE - 29;
@@ -27,14 +28,13 @@ enum Gear {
     GEAR_6 = 6
 };
 
-const std::array<float, 7> GEAR_RATIOS = {
-    0.0f,   // Neutral
-    3.909f, // 1st gear
-    2.056f, // 2nd gear
-    1.269f, // 3rd gear
-    0.964f, // 4th gear
-    0.780f, // 5th gear
-    0.680f  // 6th gear
+const std::vector GEAR_RATIOS = {
+    34.0f/12.0f,
+    31.0f/15.0f,
+    28.0f/18.0f,
+    26.0f/21.0f,
+    23.0f/22.0f,
+    22.0f/24.0f
 };
 
 struct VehicleData {

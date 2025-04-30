@@ -6,12 +6,12 @@
 #include "VehicleConstants.h"
 
 float calculateSpeed(int rpm, int gear) {
-    if (gear <= 0 || gear >= GEAR_RATIOS.size() || rpm == 0) {
+    if (gear <= 0 || gear > GEAR_RATIOS.size() || rpm == 0) {
         return 0.0f;
     }
+    float totalRatio = GEAR_RATIOS[gear-1] * FINAL_DRIVE_RATIO;
     float wheelCircumference = M_PI * WHEEL_DIAMETER_MM;
-    float speedMmPerMinute = rpm * wheelCircumference / (GEAR_RATIOS[gear] * FINAL_DRIVE_RATIO);
-    return speedMmPerMinute * 0.000001f * 60.0f;
+    return (rpm * wheelCircumference * 60.0f) / (totalRatio * 1000000.0f);
 }
 
 int gearGoal = GEAR_N;
