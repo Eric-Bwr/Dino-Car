@@ -27,7 +27,7 @@ ShiftDirection lastShiftDirection = SHIFT_NONE;
 int getServoAngle(int fromGear, int toGear) {
     if (fromGear == GEAR_N && toGear == GEAR_1) return SHIFT_DOWN_ANGLE;
     if (fromGear == GEAR_1 && toGear == GEAR_N) return SHIFT_UP_ANGLE;
-    if (fromGear == GEAR_2 && toGear == GEAR_N) return SHIFT_DOWN_ANGLE - 12;
+    if (fromGear == GEAR_2 && toGear == GEAR_N) return SHIFT_DOWN_ANGLE - 10;
     if (toGear == fromGear) return NEUTRAL_ANGLE;
     if (toGear > fromGear) return SHIFT_UP_ANGLE;
     if (toGear < fromGear) return SHIFT_DOWN_ANGLE;
