@@ -411,8 +411,8 @@ void Renderer::renderInfoTexts(float ambientTemp, float coolantTemp, float batte
     y += yOffset;
 
     SDL_Color coolantTempColor =
-            (coolantTemp > 60.0f) ? SDL_Color{255, 20, 20, 255} :
-            (coolantTemp > 40.0f) ? SDL_Color{255, 255, 20, 255} :
+            (coolantTemp > 100.0f) ? SDL_Color{255, 20, 20, 255} :
+            (coolantTemp > 85.0f) ? SDL_Color{255, 255, 20, 255} :
             SDL_Color{20, 255, 20, 255};
     SDL_SetTextureColorMod(coolantTexture, coolantTempColor.r, coolantTempColor.g, coolantTempColor.b);
     renderInfoTextWithIcon(coolantTexture, x, y, coolantTemp, "C", coolantTempColor);
