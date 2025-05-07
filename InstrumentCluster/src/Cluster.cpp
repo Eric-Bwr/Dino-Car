@@ -14,7 +14,7 @@ float calculateSpeed(int rpm, int gear) {
     return (rpm * wheelCircumference * 60.0f) / (totalRatio * 1000000.0f);
 }
 
-int gearGoal = GEAR_N;
+int gearGoal = -2;
 bool clutchPressed = false;
 Uint32 lastShiftTime = 0;
 bool servoDetached = false;
@@ -119,6 +119,10 @@ int main() {
         }
 #else
         data = arduino.getData();
+
+        if (gearGoal == -2) {
+            gearGoal = data.currentGear;
+        }
 
         int proximity = digitalRead(PROX_PIN);
         int button1 = digitalRead(BTN1_PIN);
