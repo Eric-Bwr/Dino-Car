@@ -74,6 +74,8 @@ int main() {
 
     VehicleData data;
 
+    float lastSpeed = 0.0f;
+
     lastShiftTime = SDL_GetTicks();
 #if IS_RASPI
     wiringPiSetup();
@@ -95,7 +97,7 @@ int main() {
                 data.currentGear = 0;
             }
             data.engineRpm = 0;
-            data.clutchPressed = !data.clutchPressed;
+            data.clutchPressed = clutchPressed = !data.clutchPressed;
         }
         data.ambientTemp = 20.5;
         data.voltage = ((float)data.engineRpm / RPM_MAX) * 15.0f;
@@ -164,8 +166,15 @@ int main() {
             servoDetached = false;
         }
 
+        float calculatedSpeed = calculateSpeed(data.engineRpm, data.currentGear);
+        if (clutchPressed) {
+            calculatedSpeed = lastSpeed;
+        }else {
+            lastSpeed = calculatedSpeed;
+        }
+
         data.gearGoal = data.currentGear == gearGoal ? GEAR_NONE : gearGoal;
-        renderer.render(data, calculateSpeed(data.engineRpm, data.currentGear));
+        renderer.render(data, calculatedSpeed);
         SDL_Delay(16);
     }
 }
