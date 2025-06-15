@@ -20,14 +20,14 @@ Uint32 lastShiftTime = 0;
 bool servoDetached = false;
 bool canShift = true;
 const Uint32 SHIFT_COOLDOWN_MS = 1400;
-const int BACKLASH_COMPENSATION = 8;
+const int BACKLASH_COMPENSATION = 4;
 enum ShiftDirection { SHIFT_NONE, SHIFT_UP, SHIFT_DOWN };
 ShiftDirection lastShiftDirection = SHIFT_NONE;
 
 int getServoAngle(int fromGear, int toGear) {
     if (fromGear == GEAR_N && toGear == GEAR_1) return SHIFT_DOWN_ANGLE;
     if (fromGear == GEAR_1 && toGear == GEAR_N) return SHIFT_UP_ANGLE;
-    if (fromGear == GEAR_2 && toGear == GEAR_N) return SHIFT_DOWN_ANGLE - 10;
+    if (fromGear == GEAR_2 && toGear == GEAR_N) return SHIFT_DOWN_ANGLE - 13;
     if (toGear == fromGear) return NEUTRAL_ANGLE;
     if (toGear > fromGear) return SHIFT_UP_ANGLE;
     if (toGear < fromGear) return SHIFT_DOWN_ANGLE;
@@ -74,8 +74,6 @@ int main() {
 
     VehicleData data;
 
-    float lastSpeed = 0.0f;
-
     lastShiftTime = SDL_GetTicks();
 #if IS_RASPI
     wiringPiSetup();
@@ -90,22 +88,23 @@ int main() {
 #endif
     while (running) {
 #if not IS_RASPI
-        data.engineRpm += 100;
-        if (data.engineRpm > RPM_MAX) {
-            data.currentGear++;
-            if (data.currentGear == 7) {
-                data.currentGear = 0;
-            }
-            data.engineRpm = 0;
-            data.clutchPressed = clutchPressed = !data.clutchPressed;
-        }
-        data.ambientTemp = 20.5;
-        data.voltage = ((float)data.engineRpm / RPM_MAX) * 15.0f;
-        data.coolantTemp = ((float)data.engineRpm / RPM_MAX) * THROTTLE_MAX;
-        data.engineLoad = ((float)data.engineRpm / RPM_MAX) * 100.0f;
-        data.throttle = ((float)data.engineRpm / RPM_MAX) * 72.0f;
+        // data.engineRpm += 100;
+        // if (data.engineRpm > RPM_MAX) {
+            // data.currentGear++;
+            // if (data.currentGear == 7) {
+                // data.currentGear = 0;
+            // }
+            // data.engineRpm = 0;
+            // data.clutchPressed = clutchPressed = !data.clutchPressed;
+        // }
+        // data.ambientTemp = 20.5;
+        // data.voltage = ((float)data.engineRpm / RPM_MAX) * 15.0f;
+        // data.coolantTemp = ((float)data.engineRpm / RPM_MAX) * THROTTLE_MAX;
+        // data.engineLoad = ((float)data.engineRpm / RPM_MAX) * 100.0f;
+        // data.throttle = ((float)data.engineRpm / RPM_MAX) * 72.0f;
 
         while (SDL_PollEvent(&event)) {
+            clutchPressed = true;
             if (event.type == SDL_QUIT) {
                 running = false;
             } else if (event.type == SDL_KEYDOWN) {
@@ -119,26 +118,26 @@ int main() {
                 }
             }
         }
-#else
+// #else
         data = arduino.getData();
 
         if (gearGoal == -2) {
             gearGoal = data.currentGear;
         }
 
-        int proximity = digitalRead(PROX_PIN);
-        int button1 = digitalRead(BTN1_PIN);
-        int button2 = digitalRead(BTN2_PIN);
+        // int proximity = digitalRead(PROX_PIN);
+        // int button1 = digitalRead(BTN1_PIN);
+        // int button2 = digitalRead(BTN2_PIN);
 
-        data.clutchPressed = clutchPressed = proximity == LOW;
+        // data.clutchPressed = clutchPressed = proximity == LOW;
 
-        if(button1 == LOW) {
-            shiftUp();
-        }
+        // if(button1 == LOW) {
+            // shiftUp();
+        // }
 
-        if(button2 == LOW) {
-            shiftDown();
-        }
+        // if(button2 == LOW) {
+            // shiftDown();
+        // }
 #endif
 
         Uint32 now = SDL_GetTicks();
@@ -168,9 +167,7 @@ int main() {
 
         float calculatedSpeed = calculateSpeed(data.engineRpm, data.currentGear);
         if (clutchPressed) {
-            calculatedSpeed = lastSpeed;
-        }else {
-            lastSpeed = calculatedSpeed;
+            calculatedSpeed = -1.0f;
         }
 
         data.gearGoal = data.currentGear == gearGoal ? GEAR_NONE : gearGoal;

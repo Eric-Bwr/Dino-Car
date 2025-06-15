@@ -4,7 +4,7 @@
 
 const int RPM_MAX = 12000;
 const float THROTTLE_MAX = 80.0f;
-const int WARNING_LIGHTS_RPM = 8000;
+const int WARNING_LIGHTS_RPM = 7500;
 const int WARNING_ARC_RPM = 8500;
 
 const float WHEEL_DIAMETER_MM = 360.0f;
@@ -14,7 +14,7 @@ const float INVERT_GEARBOX_REDUCTION = 5.0f / 4.0f; // 1.25
 const float FINAL_DRIVE_RATIO = PRIMARY_REDUCTION * SECONDARY_REDUCTION * INVERT_GEARBOX_REDUCTION;
 
 const int NEUTRAL_ANGLE = 86;
-const int SHIFT_UP_ANGLE = NEUTRAL_ANGLE - 34;
+const int SHIFT_UP_ANGLE = NEUTRAL_ANGLE - 32;
 const int SHIFT_DOWN_ANGLE = NEUTRAL_ANGLE + 25;
 
 #define IS_RASPI (__arm__ || __aarch64__)

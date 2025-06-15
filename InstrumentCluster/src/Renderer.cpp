@@ -194,12 +194,15 @@ void Renderer::renderGear(int gear, bool goal) {
 }
 
 void Renderer::renderSpeed(float speed) {
-    int intSpeed = static_cast<int>(speed);
-    std::ostringstream speedOss;
-    speedOss.width(2);
-    speedOss.fill('0');
-    speedOss << intSpeed;
-    std::string speedText = speedOss.str();
+    std::string speedText = "--";
+    if (speed != -1.0f) {
+        int intSpeed = static_cast<int>(speed);
+        std::ostringstream speedOss;
+        speedOss.width(2);
+        speedOss.fill('0');
+        speedOss << intSpeed;
+    }
+
     const SDL_Color speedColor = {255, 255, 255, 255};
     SDL_Surface* speedSurface = TTF_RenderText_Blended(speedFont, speedText.c_str(), speedColor);
     SDL_Texture* speedTexture = SDL_CreateTextureFromSurface(renderer, speedSurface);
