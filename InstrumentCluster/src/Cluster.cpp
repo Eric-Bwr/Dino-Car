@@ -88,20 +88,20 @@ int main() {
 #endif
     while (running) {
 #if not IS_RASPI
-        // data.engineRpm += 100;
-        // if (data.engineRpm > RPM_MAX) {
-            // data.currentGear++;
-            // if (data.currentGear == 7) {
-                // data.currentGear = 0;
-            // }
-            // data.engineRpm = 0;
-            // data.clutchPressed = clutchPressed = !data.clutchPressed;
-        // }
-        // data.ambientTemp = 20.5;
-        // data.voltage = ((float)data.engineRpm / RPM_MAX) * 15.0f;
-        // data.coolantTemp = ((float)data.engineRpm / RPM_MAX) * THROTTLE_MAX;
-        // data.engineLoad = ((float)data.engineRpm / RPM_MAX) * 100.0f;
-        // data.throttle = ((float)data.engineRpm / RPM_MAX) * 72.0f;
+        data.engineRpm += 100;
+        if (data.engineRpm > RPM_MAX) {
+            data.currentGear++;
+            if (data.currentGear == 7) {
+                data.currentGear = 0;
+            }
+            data.engineRpm = 0;
+            data.clutchPressed = clutchPressed = !data.clutchPressed;
+        }
+        data.ambientTemp = 20.5;
+        data.voltage = ((float)data.engineRpm / RPM_MAX) * 15.0f;
+        data.coolantTemp = ((float)data.engineRpm / RPM_MAX) * THROTTLE_MAX;
+        data.engineLoad = ((float)data.engineRpm / RPM_MAX) * 100.0f;
+        data.throttle = ((float)data.engineRpm / RPM_MAX) * 72.0f;
 
         while (SDL_PollEvent(&event)) {
             clutchPressed = true;
@@ -118,26 +118,26 @@ int main() {
                 }
             }
         }
-// #else
+#else
         data = arduino.getData();
 
         if (gearGoal == -2) {
             gearGoal = data.currentGear;
         }
 
-        // int proximity = digitalRead(PROX_PIN);
-        // int button1 = digitalRead(BTN1_PIN);
-        // int button2 = digitalRead(BTN2_PIN);
+        int proximity = digitalRead(PROX_PIN);
+        int button1 = digitalRead(BTN1_PIN);
+        int button2 = digitalRead(BTN2_PIN);
 
-        // data.clutchPressed = clutchPressed = proximity == LOW;
+        data.clutchPressed = clutchPressed = proximity == LOW;
 
-        // if(button1 == LOW) {
-            // shiftUp();
-        // }
+        if(button1 == LOW) {
+            shiftUp();
+        }
 
-        // if(button2 == LOW) {
-            // shiftDown();
-        // }
+        if(button2 == LOW) {
+            shiftDown();
+        }
 #endif
 
         Uint32 now = SDL_GetTicks();
