@@ -104,7 +104,6 @@ int main() {
         data.throttle = ((float)data.engineRpm / RPM_MAX) * 72.0f;
 
         while (SDL_PollEvent(&event)) {
-            clutchPressed = true;
             if (event.type == SDL_QUIT) {
                 running = false;
             } else if (event.type == SDL_KEYDOWN) {
