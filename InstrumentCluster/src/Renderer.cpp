@@ -201,6 +201,7 @@ void Renderer::renderSpeed(float speed) {
         speedOss.width(2);
         speedOss.fill('0');
         speedOss << intSpeed;
+        speedText = speedOss.str();
     }
 
     const SDL_Color speedColor = {255, 255, 255, 255};
