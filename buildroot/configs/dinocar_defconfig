@@ -1,0 +1,94 @@
+# Dino-Car Instrument Cluster - Raspberry Pi Zero 2 W defconfig
+# Minimal system that boots directly into SDL2 Cluster app
+#
+# Usage:
+#   make BR2_EXTERNAL=~/Dino-Car/buildroot dinocar_defconfig
+#   make -j$(nproc)
+
+# Architecture: ARM 64-bit (aarch64)
+BR2_aarch64=y
+
+# Raspberry Pi Zero 2 W target
+BR2_PACKAGE_RPI_FIRMWARE=y
+BR2_PACKAGE_RPI_FIRMWARE_BOOTCODE_BIN=y
+BR2_PACKAGE_RPI_FIRMWARE_VARIANT_PI=y
+BR2_PACKAGE_RPI_FIRMWARE_CONFIG_FILE="$(BR2_EXTERNAL_DINOCAR_PATH)/board/dinocar/config.txt"
+
+# Toolchain
+BR2_TOOLCHAIN_BUILDROOT_CXX=y
+BR2_TOOLCHAIN_BUILDROOT_WCHAR=y
+
+# Kernel headers from the same kernel source
+BR2_KERNEL_HEADERS_AS_KERNEL=y
+
+# Kernel
+BR2_LINUX_KERNEL=y
+BR2_LINUX_KERNEL_CUSTOM_TARBALL=y
+BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION="$(call github,raspberrypi,linux,stable_20240529)/linux-stable_20240529.tar.gz"
+BR2_LINUX_KERNEL_DEFCONFIG="bcm2711"
+BR2_LINUX_KERNEL_DTS_SUPPORT=y
+BR2_LINUX_KERNEL_INTREE_DTS_NAME="broadcom/bcm2710-rpi-zero-2-w"
+BR2_LINUX_KERNEL_NEEDS_HOST_OPENSSL=y
+
+# Kernel config fragments (DRM + USB serial for Arduino)
+BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="$(BR2_EXTERNAL_DINOCAR_PATH)/board/dinocar/linux.fragment"
+
+# Root filesystem
+BR2_TARGET_ROOTFS_EXT2=y
+BR2_TARGET_ROOTFS_EXT2_4=y
+BR2_TARGET_ROOTFS_EXT2_SIZE="128M"
+
+# SD card image
+BR2_ROOTFS_POST_BUILD_SCRIPT="$(BR2_EXTERNAL_DINOCAR_PATH)/board/dinocar/post-build.sh"
+BR2_ROOTFS_POST_IMAGE_SCRIPT="board/raspberrypizero2w-64/post-image.sh"
+BR2_ROOTFS_POST_SCRIPT_ARGS="--add-miniuart-bt-overlay"
+
+# Use custom init script (no sysvinit/systemd overhead)
+BR2_INIT_NONE=y
+BR2_SYSTEM_DEFAULT_PATH="/usr/bin:/usr/sbin:/bin:/sbin"
+
+# Busybox - minimal, just for shell/mount/modprobe
+BR2_PACKAGE_BUSYBOX=y
+
+# Graphics: DRM/KMS + SDL2
+BR2_PACKAGE_LIBDRM=y
+BR2_PACKAGE_MESA3D=y
+BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_V3D=y
+BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_VC4=y
+BR2_PACKAGE_MESA3D_OPENGL_EGL=y
+BR2_PACKAGE_MESA3D_OPENGL_ES=y
+
+BR2_PACKAGE_SDL2=y
+BR2_PACKAGE_SDL2_KMSDRM=y
+BR2_PACKAGE_SDL2_OPENGLES=y
+BR2_PACKAGE_SDL2_TTF=y
+BR2_PACKAGE_SDL2_GFX=y
+BR2_PACKAGE_SDL2_IMAGE=y
+BR2_PACKAGE_SDL2_IMAGE_PNG=y
+
+# Fonts
+BR2_PACKAGE_FREETYPE=y
+
+# PNG support
+BR2_PACKAGE_LIBPNG=y
+
+# GPIO access for buttons/proximity sensor
+BR2_PACKAGE_LIBGPIOD=y
+
+# Our Cluster app
+BR2_PACKAGE_CLUSTER=y
+
+# Host tools for SD card image generation
+BR2_PACKAGE_HOST_DOSFSTOOLS=y
+BR2_PACKAGE_HOST_GENIMAGE=y
+BR2_PACKAGE_HOST_MTOOLS=y
+
+# Disable unnecessary features for fast boot
+BR2_SYSTEM_DHCP=""
+BR2_PACKAGE_IFUPDOWN_SCRIPTS=n
+BR2_TARGET_GENERIC_GETTY=n
+# BR2_TARGET_ROOTFS_TAR is not set
+BR2_ENABLE_LOCALE_PURGE=y
+
+# Compiler cache for faster rebuilds
+BR2_CCACHE=y

@@ -1,6 +1,8 @@
 #include <iostream>
 #include <SDL.h>
-#include <wiringPi.h>
+#if IS_RASPI
+#include <gpiod.h>
+#endif
 #include "Arduino.h"
 #include "Renderer.h"
 #include "VehicleConstants.h"
@@ -58,9 +60,9 @@ void shiftDown() {
     }
 }
 
-const int PROX_PIN = 15;  // Proximity-Sensor (Pin 8)
-const int BTN1_PIN = 26;  // Button 1 (Pin 32)
-const int BTN2_PIN = 27;  // Button 2 (Pin 36)
+const unsigned int PROX_PIN = 14;  // GPIO14 (Pin 8)
+const unsigned int BTN1_PIN = 12;  // GPIO12 (Pin 32)
+const unsigned int BTN2_PIN = 16;  // GPIO16 (Pin 36)
 
 int main() {
     Arduino arduino;
@@ -76,15 +78,14 @@ int main() {
 
     lastShiftTime = SDL_GetTicks();
 #if IS_RASPI
-    wiringPiSetup();
+    struct gpiod_chip *chip = gpiod_chip_open_by_name("gpiochip0");
+    struct gpiod_line *lineProx = gpiod_chip_get_line(chip, PROX_PIN);
+    struct gpiod_line *lineBtn1 = gpiod_chip_get_line(chip, BTN1_PIN);
+    struct gpiod_line *lineBtn2 = gpiod_chip_get_line(chip, BTN2_PIN);
 
-    pinMode(PROX_PIN, INPUT);
-    pinMode(BTN1_PIN, INPUT);
-    pinMode(BTN2_PIN, INPUT);
-
-    pullUpDnControl(PROX_PIN, PUD_UP);
-    pullUpDnControl(BTN1_PIN, PUD_UP);
-    pullUpDnControl(BTN2_PIN, PUD_UP);
+    gpiod_line_request_input_flags(lineProx, "cluster", GPIOD_LINE_REQUEST_FLAG_BIAS_PULL_UP);
+    gpiod_line_request_input_flags(lineBtn1, "cluster", GPIOD_LINE_REQUEST_FLAG_BIAS_PULL_UP);
+    gpiod_line_request_input_flags(lineBtn2, "cluster", GPIOD_LINE_REQUEST_FLAG_BIAS_PULL_UP);
 #endif
     while (running) {
 #if not IS_RASPI
@@ -124,17 +125,17 @@ int main() {
             gearGoal = data.currentGear;
         }
 
-        int proximity = digitalRead(PROX_PIN);
-        int button1 = digitalRead(BTN1_PIN);
-        int button2 = digitalRead(BTN2_PIN);
+        int proximity = gpiod_line_get_value(lineProx);
+        int button1 = gpiod_line_get_value(lineBtn1);
+        int button2 = gpiod_line_get_value(lineBtn2);
 
-        data.clutchPressed = clutchPressed = proximity == LOW;
+        data.clutchPressed = clutchPressed = proximity == 0;
 
-        if(button1 == LOW) {
+        if(button1 == 0) {
             shiftUp();
         }
 
-        if(button2 == LOW) {
+        if(button2 == 0) {
             shiftDown();
         }
 #endif

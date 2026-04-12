@@ -1,0 +1,9 @@
+config BR2_PACKAGE_CLUSTER
+	bool "cluster"
+	depends on BR2_PACKAGE_SDL2
+	depends on BR2_PACKAGE_SDL2_TTF
+	depends on BR2_PACKAGE_SDL2_GFX
+	depends on BR2_PACKAGE_SDL2_IMAGE
+	depends on BR2_PACKAGE_LIBGPIOD
+	help
+	  Dino-Car Instrument Cluster application.
