@@ -6,6 +6,12 @@
 #include <vector>
 #include "VehicleConstants.h"
 
+#if IS_RASPI
+#define ASSET_PATH "assets/"
+#else
+#define ASSET_PATH "../assets/"
+#endif
+
 const float RPM_ARC_START_ANGLE = 90.0f + 30.0f;
 const float RPM_ARC_END_ANGLE = 90.0f + 330.0f;
 const float THROTTLE_ANGLE_START = 155.0f;

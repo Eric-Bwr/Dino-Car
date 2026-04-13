@@ -62,21 +62,22 @@ void Renderer::start(){
         std::cerr << "SDL_CreateTexture Error: " << SDL_GetError() << std::endl;
         return;
     }
-    gearFont = TTF_OpenFont("../assets/trans.ttf", 270);
-    gearGoalFont = TTF_OpenFont("../assets/trans.ttf", 80);
-    speedFont = TTF_OpenFont("../assets/bebas.ttf", 100);
-    numberFont = TTF_OpenFont("../assets/trans.ttf", 58);
-    trackFont = TTF_OpenFont("../assets/trans.ttf", 26);
-    infoFont = TTF_OpenFont("../assets/bebas.ttf", 50);
-    bgTexture = loadTexture("../assets/bg.png");
-    tempTexture = loadTexture("../assets/temp.png");
-    coolantTexture = loadTexture("../assets/coolant.png");
-    engineLoadTexture = loadTexture("../assets/load.png");
-    batteryTexture = loadTexture("../assets/battery.png");
-    throttleTexture = loadTexture("../assets/throttle.png");
-    clutchTexture = loadTexture("../assets/clutch.png");
-    absTexture = loadTexture("../assets/abs.png");
-    tcTexture = loadTexture("../assets/tc.png");
+    std::string a = ASSET_PATH;
+    gearFont = TTF_OpenFont((a + "trans.ttf").c_str(), 270);
+    gearGoalFont = TTF_OpenFont((a + "trans.ttf").c_str(), 80);
+    speedFont = TTF_OpenFont((a + "bebas.ttf").c_str(), 100);
+    numberFont = TTF_OpenFont((a + "trans.ttf").c_str(), 58);
+    trackFont = TTF_OpenFont((a + "trans.ttf").c_str(), 26);
+    infoFont = TTF_OpenFont((a + "bebas.ttf").c_str(), 50);
+    bgTexture = loadTexture((a + "bg.png").c_str());
+    tempTexture = loadTexture((a + "temp.png").c_str());
+    coolantTexture = loadTexture((a + "coolant.png").c_str());
+    engineLoadTexture = loadTexture((a + "load.png").c_str());
+    batteryTexture = loadTexture((a + "battery.png").c_str());
+    throttleTexture = loadTexture((a + "throttle.png").c_str());
+    clutchTexture = loadTexture((a + "clutch.png").c_str());
+    absTexture = loadTexture((a + "abs.png").c_str());
+    tcTexture = loadTexture((a + "tc.png").c_str());
     preRenderBackground();
     bgRect = {0, 0, width, height};
 }

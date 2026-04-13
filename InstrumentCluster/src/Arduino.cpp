@@ -25,42 +25,45 @@ void Arduino::start() {
     isRunning = true;
     serialThread = std::thread([this]
     {
-        try {
-            std::string chosenPort = findArduinoPort();
-            std::cout << "Arduino on: " << chosenPort << std::endl;
+        while (isRunning) {
+            try {
+                std::string chosenPort = findArduinoPort();
+                std::cout << "Arduino on: " << chosenPort << std::endl;
 
-            fd = open(chosenPort.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
-            if (fd < 0) {
-                throw std::runtime_error("Failed to open serial port: " + std::string(strerror(errno)));
+                fd = open(chosenPort.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+                if (fd < 0) {
+                    throw std::runtime_error("Failed to open serial port: " + std::string(strerror(errno)));
+                }
+
+                struct termios tty;
+                if (tcgetattr(fd, &tty) != 0) {
+                    throw std::runtime_error("Failed to get serial attributes: " + std::string(strerror(errno)));
+                }
+
+                cfsetospeed(&tty, B115200);
+                cfsetispeed(&tty, B115200);
+
+                // 8N1 (8 data bits, no parity, 1 stop bit)
+                tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;
+                tty.c_cflag &= ~(PARENB | PARODD); // No parity
+                tty.c_cflag &= ~CSTOPB;            // 1 stop bit
+                tty.c_cflag &= ~CRTSCTS;           // No flow control
+                tty.c_cflag |= CREAD | CLOCAL;     // Enable receiver, ignore modem control lines
+
+                tty.c_lflag = 0;                   // No signaling chars, no echo, no canonical processing
+                tty.c_oflag = 0;                   // No remapping, no delays
+                tty.c_cc[VMIN] = 1;                // Read blocks until 1 byte arrives
+                tty.c_cc[VTIME] = 0;               // No timeout
+
+                if (tcsetattr(fd, TCSANOW, &tty) != 0) {
+                    throw std::runtime_error("Failed to set serial attributes: " + std::string(strerror(errno)));
+                }
+                processSerial();
+            } catch (const std::exception& e) {
+                std::cerr << "Arduino: " << e.what() << " - retrying in 1s" << std::endl;
+                if (fd >= 0) { close(fd); fd = -1; }
+                sleep(1);
             }
-
-            struct termios tty;
-            if (tcgetattr(fd, &tty) != 0) {
-                throw std::runtime_error("Failed to get serial attributes: " + std::string(strerror(errno)));
-            }
-
-            cfsetospeed(&tty, B115200);
-            cfsetispeed(&tty, B115200);
-
-            // 8N1 (8 data bits, no parity, 1 stop bit)
-            tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;
-            tty.c_cflag &= ~(PARENB | PARODD); // No parity
-            tty.c_cflag &= ~CSTOPB;            // 1 stop bit
-            tty.c_cflag &= ~CRTSCTS;           // No flow control
-            tty.c_cflag |= CREAD | CLOCAL;     // Enable receiver, ignore modem control lines
-
-            tty.c_lflag = 0;                   // No signaling chars, no echo, no canonical processing
-            tty.c_oflag = 0;                   // No remapping, no delays
-            tty.c_cc[VMIN] = 1;                // Read blocks until 1 byte arrives
-            tty.c_cc[VTIME] = 0;               // No timeout
-
-            if (tcsetattr(fd, TCSANOW, &tty) != 0) {
-                throw std::runtime_error("Failed to set serial attributes: " + std::string(strerror(errno)));
-            }
-            processSerial();
-        } catch (const std::exception& e) {
-            std::cerr << "Arduino connection failed: " << e.what() << std::endl;
-            isRunning = false;
         }
     });
 }
