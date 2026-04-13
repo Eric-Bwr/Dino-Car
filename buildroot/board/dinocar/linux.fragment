@@ -3,7 +3,10 @@
 # DRM/KMS for SDL2 KMSDRM backend
 CONFIG_DRM=y
 CONFIG_DRM_V3D=y
-CONFIG_DRM_VC4=y
+CONFIG_DRM_VC4=m
+
+# Don't compress modules (so insmod works without xz)
+CONFIG_MODULE_COMPRESS_NONE=y
 
 # USB serial (for Arduino communication)
 CONFIG_USB_SERIAL=y

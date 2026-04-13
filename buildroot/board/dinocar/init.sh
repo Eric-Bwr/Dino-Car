@@ -1,29 +1,40 @@
 #!/bin/sh
-# Dino-Car init script - starts Cluster directly on framebuffer
+# Dino-Car init script - DEBUG
 
-# Mount essential filesystems
-mount -t proc proc /proc
-mount -t sysfs sysfs /sys
-mount -t devtmpfs devtmpfs /dev
+mount -t proc proc /proc 2>/dev/null
+mount -t sysfs sysfs /sys 2>/dev/null
+mount -t devtmpfs devtmpfs /dev 2>/dev/null
 
-# Set hostname
 hostname dinocar
 
-# Load kernel modules
-modprobe spi-bcm2835
-modprobe i2c-bcm2835
-modprobe vc4
+sleep 2
 
-# Wait for display + USB devices
-sleep 0.5
+echo "==========================" > /dev/tty1
+echo "  Dino-Car booted OK!     " > /dev/tty1
+echo "==========================" > /dev/tty1
+echo "" > /dev/tty1
+uname -a > /dev/tty1
+echo "" > /dev/tty1
+echo "DRI:" > /dev/tty1
+ls -la /dev/dri/ > /dev/tty1 2>&1
+echo "FB:" > /dev/tty1
+ls -la /dev/fb* > /dev/tty1 2>&1
+echo "" > /dev/tty1
+echo "Loading vc4..." > /dev/tty1
+modprobe vc4 > /dev/tty1 2>&1
+sleep 1
+echo "DRI after vc4:" > /dev/tty1
+ls -la /dev/dri/ > /dev/tty1 2>&1
+echo "" > /dev/tty1
 
-# Disable kernel messages on console
-echo 0 > /proc/sys/kernel/printk
-
-# Set SDL environment
+# Start Cluster app
+echo "Starting Cluster..." > /dev/tty1
 export SDL_VIDEODRIVER=kmsdrm
 export SDL_RENDER_DRIVER=opengles2
-
-# Start the Cluster app
 cd /usr/share/cluster
-exec /usr/bin/cluster
+/usr/bin/cluster > /dev/tty1 2>&1
+echo "Cluster exited: $?" > /dev/tty1
+
+exec /bin/sh </dev/tty1 >/dev/tty1 2>&1
+
+exec /bin/sh </dev/tty1 >/dev/tty1 2>&1

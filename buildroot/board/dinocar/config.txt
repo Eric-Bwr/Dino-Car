@@ -1,14 +1,14 @@
-# Boot config for fast boot
+# Boot config
 kernel=Image
-disable_splash=1
+arm_64bit=1
+disable_splash=0
 boot_delay=0
 boot_delay_ms=0
 dtoverlay=vc4-fkms-v3d
 gpu_mem=64
 hdmi_force_hotplug=1
-hdmi_group=2
-hdmi_mode=87
-hdmi_cvt=800 480 60 6 0 0 0
+hdmi_group=1
+hdmi_mode=16
 # Disable unnecessary stuff
 dtparam=audio=off
 camera_auto_detect=0
