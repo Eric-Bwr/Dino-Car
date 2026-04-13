@@ -1,4 +1,5 @@
 # Boot config for fast boot
+kernel=Image
 disable_splash=1
 boot_delay=0
 boot_delay_ms=0

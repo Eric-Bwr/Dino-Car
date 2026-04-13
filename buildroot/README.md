@@ -39,7 +39,6 @@ sync
 - Raspberry Pi Zero 2 W (64-bit, aarch64)
 - Linux Kernel mit USB Serial (Arduino Kommunikation via /dev/ttyACM0)
 - SDL2 + TTF + GFX + IMAGE (KMSDRM Backend)
-- wiringPi (GPIO für Proximity-Sensor + Buttons)
 - Cluster App mit allen Assets
 
 ## Rebuild nach Code-Änderungen

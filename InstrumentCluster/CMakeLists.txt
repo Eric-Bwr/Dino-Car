@@ -11,6 +11,10 @@ pkg_check_modules(LIBGPIOD REQUIRED libgpiod)
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 add_executable(Cluster ${SOURCES})
 
+if(CMAKE_CROSSCOMPILING)
+    target_compile_definitions(Cluster PRIVATE IS_RASPI=1)
+endif()
+
 target_compile_options(Cluster PRIVATE -O2 -Wall)
 
 target_include_directories(Cluster PRIVATE

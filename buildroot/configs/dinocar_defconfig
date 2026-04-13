@@ -40,7 +40,7 @@ BR2_TARGET_ROOTFS_EXT2_SIZE="128M"
 
 # SD card image
 BR2_ROOTFS_POST_BUILD_SCRIPT="$(BR2_EXTERNAL_DINOCAR_PATH)/board/dinocar/post-build.sh"
-BR2_ROOTFS_POST_IMAGE_SCRIPT="board/raspberrypizero2w-64/post-image.sh"
+BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_DINOCAR_PATH)/board/dinocar/post-image.sh"
 BR2_ROOTFS_POST_SCRIPT_ARGS="--add-miniuart-bt-overlay"
 
 # Use custom init script (no sysvinit/systemd overhead)
