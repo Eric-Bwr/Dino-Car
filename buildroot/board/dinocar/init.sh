@@ -7,10 +7,13 @@ mount -t devtmpfs devtmpfs /dev 2>/dev/null
 
 hostname dinocar
 
-sleep 2
-
 modprobe vc4 2>/dev/null
-sleep 1
+
+# Wait for DRI device
+for i in 1 2 3 4 5; do
+  [ -e /dev/dri/card0 ] && break
+  usleep 200000
+done
 
 # Start Cluster app
 export SDL_VIDEODRIVER=kmsdrm

@@ -1,1 +1,1 @@
-root=/dev/mmcblk0p2 rootwait console=tty1 fbcon=map:0
+root=/dev/mmcblk0p2 rootwait console=tty1 fbcon=map:0 quiet loglevel=0

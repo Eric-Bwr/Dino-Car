@@ -1,7 +1,7 @@
 # Boot config
 kernel=Image
 arm_64bit=1
-disable_splash=0
+disable_splash=1
 boot_delay=0
 boot_delay_ms=0
 dtoverlay=vc4-fkms-v3d
