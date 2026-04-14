@@ -81,6 +81,17 @@ VehicleData Arduino::getData() const {
 }
 
 std::string Arduino::findArduinoPort() {
+#if IS_RASPI
+    for (const auto& prefix : {"/dev/ttyUSB", "/dev/ttyACM"}) {
+        for (int i = 0; i < 4; i++) {
+            std::string port = std::string(prefix) + std::to_string(i);
+            if (std::filesystem::exists(port)) {
+                return port;
+            }
+        }
+    }
+    throw std::runtime_error("No Arduino found");
+#else
     const std::string path = "/dev/serial/by-id/";
     if (!std::filesystem::exists(path)) {
         throw std::runtime_error("Path not found: " + path);
@@ -95,6 +106,7 @@ std::string Arduino::findArduinoPort() {
     }
 
     throw std::runtime_error("No Arduino found");
+#endif
 }
 
 void Arduino::processSerial() {
